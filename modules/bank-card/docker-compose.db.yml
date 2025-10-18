@@ -1,0 +1,14 @@
+services:
+  pg:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: cards
+      POSTGRES_PASSWORD: cards
+      POSTGRES_DB: cardsdb
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations/issuer:/docker-entrypoint-initdb.d/issuer:ro
+volumes:
+  pgdata:
+
