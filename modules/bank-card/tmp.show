@@ -1,0 +1,28 @@
+package expiry
+
+import (
+	"fmt"
+	"time"
+)
+
+// YYMM：接�?ISO8583 使用
+func YYMM(issue time.Time, years int) string {
+	exp := issue.AddDate(years, 0, 0)
+	yy := exp.Year() % 100
+	return fmt.Sprintf("%02d%02d", yy, int(exp.Month()))
+}
+
+// MMYY：个别接口偏�?
+func MMYY(issue time.Time, years int) string {
+	exp := issue.AddDate(years, 0, 0)
+	yy := exp.Year() % 100
+	return fmt.Sprintf("%02d%02d", int(exp.Month()), yy)
+}
+
+// CardFace：卡面展�?
+func CardFace(issue time.Time, years int) string {
+	exp := issue.AddDate(years, 0, 0)
+	yy := exp.Year() % 100
+	return fmt.Sprintf("%02d/%02d", int(exp.Month()), yy)
+}
+
