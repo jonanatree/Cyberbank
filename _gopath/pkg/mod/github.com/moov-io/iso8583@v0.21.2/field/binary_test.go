@@ -1,0 +1,216 @@
+package field
+
+import (
+	"reflect"
+	"testing"
+
+	"github.com/moov-io/iso8583/encoding"
+	"github.com/moov-io/iso8583/prefix"
+	"github.com/stretchr/testify/require"
+)
+
+func TestBinaryField(t *testing.T) {
+	spec := &Spec{
+		Length:      10,
+		Description: "Field",
+		Enc:         encoding.Binary,
+		Pref:        prefix.Binary.Fixed,
+	}
+
+	in := []byte("1234567890")
+
+	t.Run("Pack returns binary data", func(t *testing.T) {
+		bin := NewBinary(spec)
+		bin.SetBytes(in)
+
+		packed, err := bin.Pack()
+
+		require.NoError(t, err)
+		require.Equal(t, in, packed)
+	})
+
+	t.Run("String returns binary data encoded in HEX", func(t *testing.T) {
+		bin := NewBinary(spec)
+		bin.value = in
+
+		str, err := bin.String()
+
+		require.NoError(t, err)
+		require.Equal(t, "31323334353637383930", str)
+	})
+
+	t.Run("Unpack returns binary data", func(t *testing.T) {
+		bin := NewBinary(spec)
+
+		n, err := bin.Unpack(in)
+
+		require.NoError(t, err)
+		require.Equal(t, len(in), n)
+		require.Equal(t, in, bin.value)
+	})
+
+	t.Run("Marshal sets data to the field", func(t *testing.T) {
+		bin := NewBinary(spec)
+		bin.Marshal(NewBinaryValue(in))
+
+		packed, err := bin.Pack()
+
+		require.NoError(t, err)
+		require.Equal(t, in, packed)
+	})
+
+	t.Run("Unmarshal gets data from the field", func(t *testing.T) {
+		bin := NewBinaryValue([]byte{1, 2, 3})
+		val := &Binary{}
+
+		err := bin.Unmarshal(val)
+
+		require.NoError(t, err)
+		require.Equal(t, []byte{1, 2, 3}, val.value)
+	})
+
+	t.Run("SetBytes sets data to the data field", func(t *testing.T) {
+		bin := NewBinary(spec)
+		data := &Binary{}
+		bin.Marshal(data)
+
+		err := bin.SetBytes(in)
+		require.NoError(t, err)
+
+		require.Equal(t, in, bin.value)
+	})
+
+	// SetValue sets data to the data field
+	t.Run("SetValue sets data to the data field", func(t *testing.T) {
+		bin := NewBinary(spec)
+		bin.SetValue(in)
+
+		require.Equal(t, in, bin.Value())
+	})
+
+	t.Run("Unpack sets data to data value", func(t *testing.T) {
+		bin := NewBinary(spec)
+		data := NewBinaryValue([]byte{})
+		bin.Marshal(data)
+
+		n, err := bin.Unpack(in)
+
+		require.NoError(t, err)
+		require.Equal(t, len(in), n)
+		require.Equal(t, in, bin.value)
+	})
+
+	t.Run("UnmarshalJSON unquotes input before handling it", func(t *testing.T) {
+		input := []byte(`"500000000000000000000000000000000000000000000000"`)
+
+		bin := NewBinary(spec)
+		require.NoError(t, bin.UnmarshalJSON(input))
+
+		str, err := bin.String()
+		require.NoError(t, err)
+
+		require.Equal(t, `500000000000000000000000000000000000000000000000`, str)
+	})
+
+	t.Run("MarshalJSON returns string hex repr of binary field", func(t *testing.T) {
+		bin := NewBinaryValue([]byte{0xAB})
+		marshalledJSON, err := bin.MarshalJSON()
+		require.NoError(t, err)
+		require.Equal(t, `"AB"`, string(marshalledJSON))
+	})
+
+	t.Run("returns error for zero value when fixed length and no padding specified", func(t *testing.T) {
+		bin := NewBinary(spec)
+		_, err := bin.Pack()
+
+		require.EqualError(t, err, "failed to encode length: field length: 0 should be fixed: 10")
+	})
+}
+
+func TestBinaryNil(t *testing.T) {
+	var str *Binary = nil
+
+	bs, err := str.Bytes()
+	require.NoError(t, err)
+	require.Nil(t, bs)
+
+	value, err := str.String()
+	require.NoError(t, err)
+	require.Equal(t, "", value)
+
+	bs = str.Value()
+	require.Nil(t, bs)
+}
+
+func TestBinaryFieldUnmarshal(t *testing.T) {
+	testValue := []byte{0x12, 0x34, 0x56}
+	binaryField := NewBinaryValue(testValue)
+
+	vBinary := &Binary{}
+	err := binaryField.Unmarshal(vBinary)
+	require.NoError(t, err)
+	require.Equal(t, testValue, vBinary.Value())
+
+	var s string
+	err = binaryField.Unmarshal(&s)
+	require.NoError(t, err)
+	require.Equal(t, "123456", s)
+
+	var b []byte
+	err = binaryField.Unmarshal(&b)
+	require.NoError(t, err)
+	require.Equal(t, testValue, b)
+
+	refStrValue := reflect.ValueOf(&s).Elem()
+	err = binaryField.Unmarshal(refStrValue)
+	require.NoError(t, err)
+	require.Equal(t, "123456", refStrValue.String())
+
+	refBytesValue := reflect.ValueOf(&b).Elem()
+	err = binaryField.Unmarshal(refBytesValue)
+	require.NoError(t, err)
+	require.Equal(t, testValue, refBytesValue.Bytes())
+
+	refStr := reflect.ValueOf(s)
+	err = binaryField.Unmarshal(refStr)
+	require.Error(t, err)
+	require.Equal(t, "cannot set reflect.Value of type string", err.Error())
+
+	refStrPointer := reflect.ValueOf(&s)
+	err = binaryField.Unmarshal(refStrPointer)
+	require.Error(t, err)
+	require.Equal(t, "cannot set reflect.Value of type ptr", err.Error())
+
+	err = binaryField.Unmarshal(nil)
+	require.Error(t, err)
+	require.Equal(t, "unsupported type: expected *Binary, *string, *[]byte, or reflect.Value, got <nil>", err.Error())
+}
+
+func TestBinaryFieldMarshal(t *testing.T) {
+	testValue := []byte{0x12, 0x34, 0x56}
+	binaryField := NewBinaryValue(nil)
+
+	inputStr := "123456"
+	err := binaryField.Marshal(inputStr)
+	require.NoError(t, err)
+	require.Equal(t, testValue, binaryField.Value())
+
+	err = binaryField.Marshal(&inputStr)
+	require.NoError(t, err)
+	require.Equal(t, testValue, binaryField.Value())
+
+	err = binaryField.Marshal(testValue)
+	require.NoError(t, err)
+	require.Equal(t, testValue, binaryField.Value())
+
+	err = binaryField.Marshal(&testValue)
+	require.NoError(t, err)
+	require.Equal(t, testValue, binaryField.Value())
+
+	err = binaryField.Marshal(nil)
+	require.NoError(t, err)
+
+	err = binaryField.Marshal(123456)
+	require.Error(t, err)
+	require.Equal(t, "data does not match required *Binary or (string, *string, []byte, *[]byte) type", err.Error())
+}

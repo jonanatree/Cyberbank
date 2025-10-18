@@ -1,7 +1,9 @@
 package iso8583
 
 import (
-	"fmt"
+    "fmt"
+    "strconv"
+    "strings"
 
 	"github.com/alovak/cardflow-playground/issuer/models"
 	"github.com/moov-io/iso8583"
@@ -21,7 +23,9 @@ type Server struct {
 
 // Authorizer is an interface that defines the authorization logic.
 type Authorizer interface {
-	AuthorizeRequest(req models.AuthorizationRequest) (models.AuthorizationResponse, error)
+    AuthorizeRequest(req models.AuthorizationRequest) (models.AuthorizationResponse, error)
+    CaptureByStan(pan, expiry string, stan int, amount int64, currency string) error
+    ReverseByStan(pan, expiry string, stan int) error
 }
 
 // NewServer creates a new Server instance with the given logger, address and authorizer.
@@ -94,16 +98,50 @@ func (s *Server) handleRequest(c *iso8583Connection.Connection, message *iso8583
 	logger.Info("handling request")
 
 	// here we handle different MTIs
-	switch mti {
-	case "0100":
-		err = s.handleAuthorizationRequest(c, message)
-	default:
-		err = fmt.Errorf("unknown MTI: %s", mti)
-	}
+    switch mti {
+    case "0100":
+        err = s.handleAuthorizationRequest(c, message)
+    case "0200": // demo: treat as capture request
+        err = s.handleFinancialCapture(c, message)
+    case "0400": // demo: treat as reversal request
+        err = s.handleReversalRequest(c, message)
+    default:
+        err = fmt.Errorf("unknown MTI: %s", mti)
+    }
 
 	if err != nil {
 		logger.Error("failed to handle request", "err", err)
 	}
+}
+
+func (s *Server) handleFinancialCapture(c *iso8583Connection.Connection, message *iso8583.Message) error {
+    req := &AuthorizationRequest{}
+    if err := message.Unmarshal(req); err != nil { return fmt.Errorf("unmarshal capture: %w", err) }
+    // parse STAN
+    var stan int
+    fmt.Sscanf(req.STAN, "%d", &stan)
+    if err := s.authorizer.CaptureByStan(req.PrimaryAccountNumber, req.ExpirationDate, stan, req.Amount, req.Currency); err != nil {
+        return err
+    }
+    // respond 0210 minimal
+    resp := &AuthorizationResponse{MTI: "0210", STAN: req.STAN, ApprovalCode: "00"}
+    msg := iso8583.NewMessage(spec)
+    if err := msg.Marshal(resp); err != nil { return err }
+    return c.Reply(msg)
+}
+
+func (s *Server) handleReversalRequest(c *iso8583Connection.Connection, message *iso8583.Message) error {
+    req := &AuthorizationRequest{}
+    if err := message.Unmarshal(req); err != nil { return fmt.Errorf("unmarshal reversal: %w", err) }
+    var stan int
+    fmt.Sscanf(req.STAN, "%d", &stan)
+    if err := s.authorizer.ReverseByStan(req.PrimaryAccountNumber, req.ExpirationDate, stan); err != nil {
+        return err
+    }
+    resp := &AuthorizationResponse{MTI: "0410", STAN: req.STAN, ApprovalCode: "00"}
+    msg := iso8583.NewMessage(spec)
+    if err := msg.Marshal(resp); err != nil { return err }
+    return c.Reply(msg)
 }
 
 // handleAuthorizationRequest handles authorization requests.
@@ -123,21 +161,30 @@ func (s *Server) handleAuthorizationRequest(c *iso8583Connection.Connection, mes
 
 	// here we create an instance of our authorization request
 	// and pass it to the authorizer
-	authRequest := models.AuthorizationRequest{
-		Amount:   requestData.Amount,
-		Currency: requestData.Currency,
-		Card: models.Card{
-			Number:                requestData.PrimaryAccountNumber,
-			ExpirationDate:        requestData.ExpirationDate,
-			CardVerificationValue: requestData.CardVerificationValue,
-		},
-		Merchant: models.Merchant{
-			Name:       requestData.AcceptorInformation.Name,
-			MCC:        requestData.AcceptorInformation.MCC,
-			PostalCode: requestData.AcceptorInformation.PostalCode,
-			WebSite:    requestData.AcceptorInformation.WebSite,
-		},
-	}
+    // Parse STAN to optional int (trim leading zeros)
+    var stanPtr *int
+    if s := strings.TrimLeft(requestData.STAN, "0"); s != "" {
+        if v, err := strconv.Atoi(s); err == nil {
+            stanPtr = &v
+        }
+    }
+
+    authRequest := models.AuthorizationRequest{
+        Amount:   requestData.Amount,
+        Currency: requestData.Currency,
+        Card: models.Card{
+            Number:                requestData.PrimaryAccountNumber,
+            ExpirationDate:        requestData.ExpirationDate,
+            CardVerificationValue: requestData.CardVerificationValue,
+        },
+        Merchant: models.Merchant{
+            Name:       requestData.AcceptorInformation.Name,
+            MCC:        requestData.AcceptorInformation.MCC,
+            PostalCode: requestData.AcceptorInformation.PostalCode,
+            WebSite:    requestData.AcceptorInformation.WebSite,
+        },
+        STAN: stanPtr,
+    }
 
 	// we define a variable that will hold the response data
 	// we need to define it here so we can set its value in the if/else block
