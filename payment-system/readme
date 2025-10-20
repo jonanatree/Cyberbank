@@ -1,0 +1,57 @@
+cd to cyber-bank-payment-system
+
+docker compose down
+docker compose up -d --build
+
+
+curl http://localhost:8080/health
+curl http://localhost:8080/clients
+
+
+# 在 payment-system 目录
+docker compose down
+docker compose up -d --build
+
+# 健康检查
+curl http://localhost:8080/health
+
+创建顾客
+curl -X POST http://localhost:8080/clients \
+  -H "Content-Type: application/json" \
+  -d '{"firstname":"Alice","lastname":"Lee"}'
+# 记下返回中的 clientId
+
+建户
+curl -X POST http://localhost:8080/accounts \
+  -H "Content-Type: application/json" \
+  -d '{"clientId": 3, "productId": 1, "openingBalance": 0}'
+# 记下 savingsAccountId
+
+批准 激活
+curl -X POST http://localhost:8080/accounts/<<saving_ID>>/approve
+curl -X POST http://localhost:8080/accounts/<<saving_ID>>/activate
+
+
+
+存钱
+curl -X POST http://localhost:8080/accounts/<<Saving_ID>>/deposit \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 1000}'
+
+转账
+curl -X POST http://localhost:8080/payments \
+  -H "Content-Type: application/json" \
+  -d '{"fromAccountId": 1, "toAccountId": 2, "amount": 120.5}'
+看账户1的交易历史
+curl http://localhost:8080/accounts/1/transactions
+
+
+
+查看客户 3 的交易历史
+curl "http://localhost:8080/payments/history?clientId=3"
+
+
+curl http://localhost:8080/accounts/1/details
+
+
+curl http://localhost:8080/dashboard/3
