@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  payment-api:
+    build: .
+    container_name: payment-api
+    ports:
+      - "8080:8080"
+    environment:
+      - FINERACT_URL=${FINERACT_URL}
+      - FINERACT_TENANT=${FINERACT_TENANT}
+      - FINERACT_USER=${FINERACT_USER}
+      - FINERACT_PASSWORD=${FINERACT_PASSWORD}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    networks:
+      - corebank
+
+networks:
+  corebank:
+    external: true
+    name: core_bank_default
