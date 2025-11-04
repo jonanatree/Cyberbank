@@ -1,6 +1,6 @@
 
 // controllers/accountController.js
-import { fineract, stdDates } from "./fineractClient.js";
+import { fineract, stdDates, parseFineractDate, toIsoDateString } from "./fineractClient.js";
 
 // create account
 export async function createSavingsAccount(req, res) {
@@ -119,7 +119,7 @@ export async function listSavingsTransactions(req, res) {
 
         const result = txs.map(tx => ({
             id: tx.id,
-            date: tx.date || tx.submittedOnDate,
+            date: toIsoDateString(parseFineractDate(tx.date ?? tx.submittedOnDate)),
             type: tx.transactionType?.value || "Unknown",
             amount: tx.amount,
             currency: tx.currency?.code,

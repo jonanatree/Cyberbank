@@ -1,5 +1,5 @@
 // controllers/analyticsController.js
-import { fineract, stdDates } from "./fineractClient.js";
+import { fineract, stdDates, parseFineractDate, toIsoDateString } from "./fineractClient.js";
 
 // search all transaction history
 export async function getPaymentHistory(req, res) {
@@ -16,7 +16,7 @@ export async function getPaymentHistory(req, res) {
             const txRes = await fineract.get(`/savingsaccounts/${acc.id}?associations=transactions`);
             const txs = txRes.data?.transactions || [];
             txs.forEach(t => {
-                const date = new Date(t.date || t.submittedOnDate);
+                const date = parseFineractDate(t.date ?? t.submittedOnDate);
                 if (
                     (!from || date >= new Date(from)) &&
                     (!to || date <= new Date(to))
@@ -26,7 +26,7 @@ export async function getPaymentHistory(req, res) {
                         productName: acc.productName,
                         type: t.transactionType?.value,
                         amount: t.amount,
-                        date: t.date || t.submittedOnDate,
+                        date: toIsoDateString(date),
                         runningBalance: t.runningBalance,
                     });
                 }
@@ -55,7 +55,7 @@ export async function getAccountDetails(req, res) {
         const summary = d.summary || {};
         const recent = (d.transactions || []).slice(0, 5).map(t => ({
             id: t.id,
-            date: t.date || t.submittedOnDate,
+            date: toIsoDateString(parseFineractDate(t.date ?? t.submittedOnDate)),
             type: t.transactionType?.value,
             amount: t.amount,
             runningBalance: t.runningBalance,
