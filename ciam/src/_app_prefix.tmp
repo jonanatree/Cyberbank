@@ -1,0 +1,71 @@
+import Fastify from "fastify";
+// fastify-cors is deprecated; Fastify has @fastify/cors, but keeping simple here
+import cors from "@fastify/cors";
+import { config } from "./config.js";
+import { registerWebAuthnRoutes } from "./services/webauthn.js";
+import { registerOidcRoutes } from "./services/oidc.js";
+import { registerPolicyRoutes } from "./services/policy.js";
+import { registerCibaRoutes } from "./services/ciba.js";
+import { registerTxnRoutes } from "./services/txn.js";
+import { registerGatewayRoutes } from "./services/gateway.js";
+import { registerDpopRoutes } from "./services/dpop.js";
+import { AuthStore } from "./store/auth.js";
+import { registerUserinfoRoutes } from "./services/userinfo.js";
+import requestId from "./middlewares/request-id.js";
+import errorHandler from "./middlewares/error.js";
+import * as audit from "./services/audit.js";
+
+export function buildApp() {
+  const app = Fastify({ logger: true });
+  app.register(requestId);
+  app.register(cors as any, {
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+      const allowed = config.corsOrigins.some((o) => origin.startsWith(o));
+      cb(null, allowed);
+    },
+    credentials: true,
+  });
+
+  app.get("/", async () => ({ service: "ciam-idp", webauthn: true }));
+  app.get("/health", async () => ({ status: "ok" }));
+  app.get("/metrics", async () => "up 1\n");
+
+  // Static demo (served by fastify only for this simple case)
+  if (config.showDemos.includes("demo")) app.get("/demo", async (_req, reply) => { reply.type("text/html").send(DEMO_HTML); });
+  if (config.showDemos.includes("demo-l3")) app.get("/demo-l3", async (_req, reply) => { reply.type("text/html").send(DEMO_L3_HTML); });
+  if (config.showDemos.includes("demo-web")) app.get("/demo-web", async (_req, reply) => { reply.type("text/html").send(DEMO_WEB_HTML); });
+  if (config.showDemos.includes("demo-approver")) app.get("/demo-approver", async (_req, reply) => { reply.type("text/html").send(DEMO_APPROVER_HTML); });
+  if (config.showDemos.includes("demo-tx")) app.get("/demo-tx", async (_req, reply) => { reply.type("text/html").send(DEMO_TX_HTML); });
+  if (config.showDemos.includes("demo-dpop")) app.get("/demo-dpop", async (_req, reply) => { reply.type("text/html").send(DEMO_DPOP_HTML); });
+
+  registerWebAuthnRoutes(app);
+  registerOidcRoutes(app);
+  registerPolicyRoutes(app);
+  registerCibaRoutes(app);
+  if (config.enableTxnSigning) registerTxnRoutes(app);
+  registerGatewayRoutes(app);
+  registerDpopRoutes(app);
+  registerUserinfoRoutes(app);
+  app.register(errorHandler);
+  app.addHook("onReady", async () => {
+    audit.log("APP_STARTED", { baseUrl: config.baseUrl });
+    // periodic sweeper for expired CIBA sessions and stale jti
+    setInterval(() => {
+      try { AuthStore.sweepExpiredCiba((s)=>audit.log("CIBA_EXPIRED", { auth_req_id: s.id, user_id: s.user_id })); } catch {}
+      try { AuthStore.sweepJti(); } catch {}
+    }, 60_000);
+    // optional demo user pre-seed
+    try {
+      if (process.env.DEMO_PRESEED?.toLowerCase() === 'true') {
+        const { MemoryStore } = await import('./store/memory.js');
+        MemoryStore.upsertUser({ id: 'u1', username: 'u1', displayName: 'Alice', credentials: [] });
+        MemoryStore.upsertUser({ id: 'u2', username: 'u2', displayName: 'Bob', credentials: [] });
+        audit.log('DEMO_PRESEED', { users: ['u1','u2'] });
+      }
+    } catch {}
+  });
+  return app;
+}
+
+

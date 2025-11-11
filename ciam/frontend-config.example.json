@@ -1,0 +1,15 @@
+{
+  "issuer": "http://localhost:3001",
+  "authorization_endpoint": "http://localhost:3001/oauth/authorize",
+  "token_endpoint": "http://localhost:3001/oauth/token",
+  "jwks_uri": "http://localhost:3001/.well-known/jwks.json",
+  "backchannel_authentication_endpoint": "http://localhost:3001/backchannel/authentication",
+  "userinfo_endpoint": "http://localhost:3001/userinfo",
+  "demo": {
+    "show": ["demo-web", "demo-approver", "demo-dpop"],
+    "rpId": "localhost",
+    "origin": "http://localhost:3001"
+  },
+  "cors": ["http://localhost:3000"]
+}
+

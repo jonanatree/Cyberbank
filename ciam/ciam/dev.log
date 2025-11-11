@@ -1,0 +1,7 @@
+
+> ciam-idp@0.1.0 dev
+> tsx watch src/index.ts
+
+{"ts":"2025-11-10T05:11:46.360Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T05:11:46.365Z","event":"DEMO_PRESEED","users":["u1","u2"]}
+{"level":50,"time":1762751506367,"pid":36356,"hostname":"Joanna","err":{"type":"Error","message":"listen EADDRINUSE: address already in use 0.0.0.0:3001","stack":"Error: listen EADDRINUSE: address already in use 0.0.0.0:3001\n    at Server.setupListenHandle [as _listen2] (node:net:1898:16)\n    at listenInCluster (node:net:1946:12)\n    at doListen (node:net:2116:7)\n    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)","code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3001},"msg":"failed to start"}

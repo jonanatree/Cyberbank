@@ -1,0 +1,62 @@
+{"ts":"2025-11-10T05:11:35.280Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T05:11:35.284Z","event":"DEMO_PRESEED","users":["u1","u2"]}
+{"ts":"2025-11-10T05:11:46.360Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T05:33:19.562Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T05:35:36.493Z","event":"CIBA_STARTED","trace_id":"a1706e2a-5c7e-4000-aef2-5343ec05e1ac","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"56080b3f-7e9e-4e3d-8f28-f09c9762f018","user_id":"u1","client_id":"public-client","scope":"openid","level":"L2"}
+{"ts":"2025-11-10T05:35:40.607Z","event":"CIBA_STARTED","trace_id":"5bd33f92-c292-49d5-90b0-a520993918e5","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"56080b3f-7e9e-4e3d-8f28-f09c9762f018","status":"pending"}
+{"ts":"2025-11-10T05:35:54.704Z","event":"CIBA_STARTED","trace_id":"456767d8-948d-401d-8238-b37a0fe0a69d","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"4e274b58-21c1-4b2d-a12b-4d2f1bfaffa3","user_id":"u1","client_id":"public-client","level":"L2"}
+{"ts":"2025-11-10T05:37:19.587Z","event":"CIBA_EXPIRED","auth_req_id":"17869e82-3d48-4aba-a420-1a9ac9caae74","user_id":"u1"}
+{"ts":"2025-11-10T05:37:19.588Z","event":"CIBA_EXPIRED","auth_req_id":"eefaaba2-6fb9-4c72-8889-84d437897c3a","user_id":"u1"}
+{"ts":"2025-11-10T05:37:58.174Z","event":"CIBA_STARTED","trace_id":"0c5a3baa-69e9-4e3b-99f1-c1c8bd316a8f","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"64b8a9b9-8a77-44c0-97f6-277c3e07ac0f","user_id":"u1","client_id":"public-client","level":"L2"}
+{"ts":"2025-11-10T05:38:19.602Z","event":"CIBA_EXPIRED","auth_req_id":"56080b3f-7e9e-4e3d-8f28-f09c9762f018","user_id":"u1"}
+{"ts":"2025-11-10T05:38:19.603Z","event":"CIBA_EXPIRED","auth_req_id":"4e274b58-21c1-4b2d-a12b-4d2f1bfaffa3","user_id":"u1"}
+{"ts":"2025-11-10T05:40:19.622Z","event":"CIBA_EXPIRED","auth_req_id":"64b8a9b9-8a77-44c0-97f6-277c3e07ac0f","user_id":"u1"}
+{"ts":"2025-11-10T05:43:51.711Z","event":"CIBA_STARTED","trace_id":"9647acd4-b4ba-4315-94d6-e446b21763b4","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"2874a80f-23a8-4417-a60f-e749ea4c3dcb","user_id":"u1","client_id":"public-client","scope":"openid","level":"L2"}
+{"ts":"2025-11-10T05:43:55.862Z","event":"CIBA_STARTED","trace_id":"c2484549-e4ee-4d3b-9564-15f6cb09555d","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"2874a80f-23a8-4417-a60f-e749ea4c3dcb","status":"pending"}
+{"ts":"2025-11-10T05:46:19.642Z","event":"CIBA_EXPIRED","auth_req_id":"2874a80f-23a8-4417-a60f-e749ea4c3dcb","user_id":"u1"}
+{"ts":"2025-11-10T05:46:41.764Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T05:49:41.779Z","event":"CIBA_EXPIRED","auth_req_id":"43417b15-1809-49f8-b99d-2311906782c0","user_id":"u1"}
+{"ts":"2025-11-10T05:55:24.152Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T05:56:18.632Z","event":"CIBA_APPROVED","trace_id":"668b71b3-8f05-471e-aea2-ba71078ff6bf","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"3b315010-b760-43a4-aa7d-62afd2c7f84a","user_id":"u1"}
+{"ts":"2025-11-10T05:57:48.052Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T05:58:01.734Z","event":"CIBA_APPROVED","trace_id":"44a5df34-a6e2-49f4-bd8b-e535190b6d27","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"4ca9eb85-7a57-43fe-ae5e-41fdd3598516","user_id":"u1"}
+{"ts":"2025-11-10T06:00:48.085Z","event":"CIBA_EXPIRED","auth_req_id":"4ca9eb85-7a57-43fe-ae5e-41fdd3598516","user_id":"u1"}
+{"ts":"2025-11-10T06:04:26.705Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T06:04:38.743Z","event":"CIBA_APPROVED","trace_id":"82e49087-dbdc-4336-89df-90444b1fd81c","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"eb1c6843-7193-4ed4-b30c-7db4e54ae804","user_id":"u1"}
+{"ts":"2025-11-10T06:04:41.117Z","event":"AUTH_SUCCESS","trace_id":"1e61d6be-b76e-49ba-8657-c4bd4b27a474","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","phase":"token_ciba","sub":"u1","scope":"openid","acr":"urn:step-up:L2"}
+{"ts":"2025-11-10T06:06:31.877Z","event":"CIBA_APPROVED","trace_id":"1cc4ea31-b24b-4a11-94ca-0227bd911ce5","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","auth_req_id":"b3d1aab2-9897-4b29-84ee-88fc8721b8f5","user_id":"u1"}
+{"ts":"2025-11-10T06:06:33.914Z","event":"AUTH_SUCCESS","trace_id":"db9b3cfb-2330-4a6a-ab7a-b2bb01feb6fd","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.26100; zh-CN) PowerShell/7.5.4","phase":"token_ciba","sub":"u1","scope":"openid profile","acr":"urn:step-up:L2"}
+{"ts":"2025-11-10T06:07:26.711Z","event":"CIBA_EXPIRED","auth_req_id":"eb1c6843-7193-4ed4-b30c-7db4e54ae804","user_id":"u1"}
+{"ts":"2025-11-10T06:07:26.712Z","event":"CIBA_EXPIRED","auth_req_id":"9a20dbba-f73c-4c55-95cb-db3417abc32f","user_id":"u1"}
+{"ts":"2025-11-10T06:08:26.724Z","event":"CIBA_EXPIRED","auth_req_id":"2c5899b2-8db7-4a05-af73-49bae994cb6e","user_id":"u1"}
+{"ts":"2025-11-10T06:09:26.725Z","event":"CIBA_EXPIRED","auth_req_id":"b3d1aab2-9897-4b29-84ee-88fc8721b8f5","user_id":"u1"}
+{"ts":"2025-11-10T10:45:34.328Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T11:00:09.692Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T11:20:25.427Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T11:24:29.378Z","event":"CIBA_APPROVED","trace_id":"35fb4496-2b35-48ab-ab72-3b8f78682d36","ip":"127.0.0.1","ua":"curl/8.5.0","auth_req_id":"c5c2254a-2597-42c4-84f3-c779f8ddf23e","user_id":"u1"}
+{"ts":"2025-11-10T11:24:29.505Z","event":"AUTH_SUCCESS","trace_id":"01c1ad12-507a-42f4-950a-3081e2065613","ip":"127.0.0.1","ua":"curl/8.5.0","phase":"token_ciba","sub":"u1","scope":"openid profile","acr":"urn:step-up:L2"}
+{"ts":"2025-11-10T11:25:58.104Z","event":"CIBA_EXPIRED","auth_req_id":"3b7cf915-eb4c-42bd-87b1-88b3a9cbedb6","user_id":"u1"}
+{"ts":"2025-11-10T11:26:53.375Z","event":"CIBA_EXPIRED","auth_req_id":"c5c2254a-2597-42c4-84f3-c779f8ddf23e","user_id":"u1"}
+{"ts":"2025-11-10T11:26:57.086Z","event":"DPOP_VERIFIED","trace_id":"b8ce3763-cf8d-4dc2-bb6c-8489136f7cf7","ip":"127.0.0.1","ua":"curl/8.5.0","jkt":"i6Sk1oIuhS_RoVfY-4pAbgfR64kMaoYD6SRWqiV73JQ","htm":"POST","htu":"http://localhost:3001/oauth/token"}
+{"ts":"2025-11-10T11:38:13.874Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T11:52:37.155Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T12:06:03.962Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T12:11:11.326Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T12:32:19.060Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T13:45:49.652Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T13:45:49.663Z","event":"DEMO_PRESEED","users":["u1","u2"]}
+{"ts":"2025-11-10T13:47:24.835Z","event":"AUTH_SUCCESS","trace_id":"c32f3d8b-2ca5-4d5e-abea-2f73c36e3f56","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","phase":"webauthn_register","sub":"u1"}
+{"ts":"2025-11-10T13:48:03.812Z","event":"AUTH_SUCCESS","trace_id":"733048bb-a9d0-4d29-97eb-7bdd59437d42","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","phase":"webauthn_login","sub":"u1"}
+{"ts":"2025-11-10T14:07:33.118Z","event":"AUTH_SUCCESS","trace_id":"b7b41bd6-0c02-49b7-86c9-feb011af4f33","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","phase":"webauthn_login","sub":"u1"}
+{"ts":"2025-11-10T14:33:14.197Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T14:33:14.212Z","event":"DEMO_PRESEED","users":["u1","u2"]}
+{"ts":"2025-11-10T15:09:44.506Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T15:09:44.514Z","event":"DEMO_PRESEED","users":["u1","u2"]}
+{"ts":"2025-11-10T15:10:34.735Z","event":"AUTH_SUCCESS","trace_id":"7aa0630d-ed4b-48d9-99f7-d76467d1de27","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","phase":"webauthn_register","sub":"u1"}
+{"ts":"2025-11-10T15:11:19.903Z","event":"AUTH_SUCCESS","trace_id":"eeee93eb-99d0-423c-8f85-0e9c593cfaac","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","phase":"webauthn_login","sub":"u1"}
+{"ts":"2025-11-10T15:29:45.766Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T15:29:45.777Z","event":"DEMO_PRESEED","users":["u1","u2"]}
+{"ts":"2025-11-10T15:47:25.394Z","event":"APP_STARTED","baseUrl":"http://localhost:3001"}
+{"ts":"2025-11-10T15:47:25.408Z","event":"DEMO_PRESEED","users":["u1","u2"]}
+{"ts":"2025-11-10T15:48:34.250Z","event":"AUTH_SUCCESS","trace_id":"9fc1fda5-d188-49f2-a0cc-a7f7f78cdc85","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","phase":"webauthn_register","sub":"u1"}
+{"ts":"2025-11-10T15:48:41.486Z","event":"AUTH_SUCCESS","trace_id":"234e7a4f-4b03-45b1-b2f0-d9c8f84a1d47","ip":"127.0.0.1","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","phase":"webauthn_login","sub":"u1"}
