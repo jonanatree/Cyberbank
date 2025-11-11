@@ -1,0 +1,27 @@
+##### Stage 1: build binaries #####
+FROM golang:1.21-alpine AS build
+WORKDIR /src
+# Install toolchain for CGO-less static builds (some deps still need headers)
+RUN apk add --no-cache git ca-certificates build-base
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+# Build target binary; default issuer, override via --build-arg TARGET=acquirer
+ARG TARGET=issuer
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/${TARGET} ./cmd/${TARGET}
+
+##### Stage 2: slim runtime #####
+FROM alpine:3.20
+WORKDIR /app
+RUN apk add --no-cache ca-certificates
+ARG TARGET=issuer
+ENV TARGET=${TARGET}
+COPY --from=build /out/${TARGET} /app/${TARGET}
+# Sensible defaults; docker-compose overrides for local demo
+ENV REPO_BACKEND=pg \
+    DB_DSN=postgres://cards:cards@card-pg:5432/cardsdb?sslmode=disable \
+    PAN_HASH_KEY=dev-secret-pepper \
+    CARD_ISSUER_HTTP_ADDR=issuer:9090 \
+    ISO8583_ADDR=issuer:8583
+EXPOSE 9090 8583 8080
+ENTRYPOINT ["/bin/sh","-c","/app/${TARGET}"]

@@ -46,6 +46,10 @@ func (a *App) Start() error {
 	router.Use(middleware.NewStructuredLogger(a.logger))
 
 	repository := NewRepository()
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
 
 	// setup iso8583Client
 	stanGenerator := iso8583.NewStanGenerator()

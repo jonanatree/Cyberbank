@@ -1,0 +1,68 @@
+name: cyberbank-card
+
+services:
+  card-pg:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: cards
+      POSTGRES_PASSWORD: cards
+      POSTGRES_DB: cardsdb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cards -d cardsdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations/issuer:/docker-entrypoint-initdb.d/issuer:ro
+    ports:
+      - "5437:5432"
+
+  issuer:
+    build:
+      context: .
+      dockerfile: Dockerfile.card
+      args:
+        TARGET: issuer
+    depends_on:
+      card-pg:
+        condition: service_healthy
+    environment:
+      REPO_BACKEND: pg
+      DB_DSN: postgres://cards:cards@card-pg:5432/cardsdb?sslmode=disable
+      PAN_HASH_KEY: dev-secret-pepper
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:9090/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    ports:
+      - "9090:9090"
+      - "8583:8583"
+
+  acquirer:
+    build:
+      context: .
+      dockerfile: Dockerfile.card
+      args:
+        TARGET: acquirer
+    depends_on:
+      issuer:
+        condition: service_healthy
+    environment:
+      ACQUIRER_HTTP_ADDR: 0.0.0.0:8080
+      ISO8583_ADDR: issuer:8583
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    ports:
+      - "8081:8080"
+
+volumes:
+  pgdata: {}

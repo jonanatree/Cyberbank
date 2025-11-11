@@ -69,6 +69,31 @@ Local Dev
    - Choose Platform or Cross-platform; enable Resident Key and User Verification
 3) Visit http://localhost:3001/demo to register/login with passkey
 
+Containerized (Prod-style)
+1) Provide TLS material for nginx (self-signed via `mkcert` or `openssl`):
+   ```bash
+   cd ciam
+   mkdir -p certs
+   mkcert -key-file certs/dev-key.pem -cert-file certs/dev-cert.pem ciam.local localhost 127.0.0.1
+   ```
+   Adjust `nginx.conf` if you use different filenames; defaults are `/etc/nginx/certs/dev-cert.pem` + `/etc/nginx/certs/dev-key.pem`.
+2) Build + run the stack:
+   ```bash
+   docker compose up -d --build
+   docker compose ps
+   curl -f http://localhost:3001/health
+   curl -fk https://localhost:9443/health
+   ```
+   - App: http://localhost:3001
+   - TLS proxy: https://localhost:9443 (uses the certs you generated)
+3) Override additional env (CIAM_BASE_URL, WEBAUTHN_ORIGIN, JWT_PRIVATE_KEY, etc.) by adding them under the `ciam` service in `docker-compose.yml`.
+
+Dev containers (hot reload)
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+This mounts the repo into the container and runs `npm run dev`, so edits to `src/**` hot-reload immediately on port 3001.
+
 Bank Local Domains (optional)
 - Add hosts: 127.0.0.1 bank.local app.bank.local api.bank.local idp.bank.local
 - Generate TLS via mkcert for bank.local and *.bank.local; run CIAM under https and set:

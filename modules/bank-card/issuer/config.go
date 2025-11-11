@@ -15,10 +15,10 @@ type Config struct {
 }
 
 func DefaultConfig() *Config {
-    return &Config{
-        HTTPAddr:    "localhost:9090",
-        ISO8583Addr: "localhost:8583",
-        CardProduct: "debit",
-        BINPrefix:   "421234",
-    }
+	return &Config{
+		HTTPAddr:    "0.0.0.0:9090",
+		ISO8583Addr: "0.0.0.0:8583",
+		CardProduct: "debit",
+		BINPrefix:   "421234",
+	}
 }

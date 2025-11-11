@@ -1,0 +1,18 @@
+version: "3.9"
+name: cyberbank-ciam-dev
+
+services:
+  ciam:
+    build:
+      context: .
+      dockerfile: Dockerfile.ciam
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      CIAM_PORT: 3001
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3001:3001"

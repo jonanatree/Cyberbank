@@ -112,6 +112,10 @@ func (a *App) Start() error {
     api.AppendRoutes(router)
 
     // Health and simple admin endpoints
+    router.Get("/health", func(w http.ResponseWriter, r *http.Request){
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte(`{"status":"ok"}`))
+    })
     router.Get("/-/live", func(w http.ResponseWriter, r *http.Request){ w.WriteHeader(http.StatusOK) })
     router.Get("/-/ready", func(w http.ResponseWriter, r *http.Request){
         ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second); defer cancel()
