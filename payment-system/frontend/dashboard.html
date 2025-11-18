@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>CyberBank – Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="common.js" defer></script>
+    <script defer>
+        window.addEventListener("DOMContentLoaded", () => {
+            initNav("dashboard");
+
+            const cid = getCurrentClientId();
+            const input = document.getElementById("clientId");
+            if (cid) {
+                input.placeholder = `默认使用当前客户 (${cid})`;
+            }
+
+            document.getElementById("btn-dashboard").onclick = () => {
+                let idStr = input.value.trim();
+                const current = getCurrentClientId();
+                if (!idStr) {
+                    if (!current) {
+                        alert("请先在首页或创建客户页设置当前客户，或手动输入 clientId");
+                        return;
+                    }
+                    idStr = String(current);
+                }
+                const id = Number(idStr);
+                if (!id) {
+                    alert("clientId 必须是数字");
+                    return;
+                }
+                callApi(`/dashboard/${encodeURIComponent(id)}`);
+            };
+
+            document.getElementById("btn-history").onclick = () => {
+                let idStr = input.value.trim();
+                const current = getCurrentClientId();
+                if (!idStr) {
+                    if (!current) {
+                        alert("请先在首页或创建客户页设置当前客户，或手动输入 clientId");
+                        return;
+                    }
+                    idStr = String(current);
+                }
+                const id = Number(idStr);
+                if (!id) {
+                    alert("clientId 必须是数字");
+                    return;
+                }
+                callApi(`/payments/history?clientId=${encodeURIComponent(id)}`);
+            };
+        });
+    </script>
+</head>
+
+<body>
+    <header class="app-bar">
+        <div class="title">CyberBank Payment System</div>
+        <nav>
+            <a href="index.html" data-page="home">首页</a>
+            <a href="create-client.html" data-page="client">创建客户</a>
+            <a href="accounts.html" data-page="account">开户</a>
+            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="dashboard.html" data-page="dashboard">Dashboard</a>
+            <a href="transactions.html" data-page="transactions">交易记录</a>
+        </nav>
+    </header>
+
+    <main class="page">
+        <div class="page-header">
+            <h1>客户 Dashboard <span class="badge" id="currentClientBadge">当前客户：未选择</span></h1>
+            <p>根据 clientId 调用 <code>/dashboard/:clientId</code> 和 <code>/payments/history</code>。</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>选择客户</h2>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>clientId</label>
+                        <input id="clientId" placeholder="留空则使用当前客户" />
+                    </div>
+                </div>
+                <button id="btn-dashboard" class="btn">查看 Dashboard</button>
+                <button id="btn-history" class="btn outlined">查看支付历史</button>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2>API 输出</h2>
+                    <div class="output-card">
+                        <div class="title">输出</div>
+                        <pre id="output"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
