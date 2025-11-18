@@ -11,12 +11,37 @@ if (!baseURL) {
     throw new Error("FINERACT_URL is not set in environment!");
 }
 
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: false,
+    servername: "localhost",
+    minVersion: "TLSv1.2",
+    maxVersion: "TLSv1.2",
+});
+
+// export const fineract = axios.create({
+//     baseURL,
+//     auth: { username: FINERACT_USER, password: FINERACT_PASSWORD },
+//     headers: { "Fineract-Platform-TenantId": FINERACT_TENANT },
+//     httpsAgent,
+// });
+
 export const fineract = axios.create({
     baseURL,
     auth: { username: FINERACT_USER, password: FINERACT_PASSWORD },
-    headers: { "Fineract-Platform-TenantId": FINERACT_TENANT },
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }), // 
+    // 所有请求的默认 header
+    headers: {
+        Host: "localhost",                         // ✅ 伪装成 localhost
+        "Fineract-Platform-TenantId": FINERACT_TENANT,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+    },
+    // 所有请求默认带 tenantIdentifier
+    params: {
+        tenantIdentifier: FINERACT_TENANT,         // ✅ ?tenantIdentifier=default
+    },
+    httpsAgent,
 });
+
 
 // real date + locale
 export function stdDates(date = new Date()) {
