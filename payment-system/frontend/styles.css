@@ -1,0 +1,242 @@
+:root {
+    --primary: #1976d2;
+    --primary-dark: #115293;
+    --primary-light: #63a4ff;
+    --bg: #f5f5f7;
+    --card-bg: #ffffff;
+    --text-main: #1f2933;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --error: #d32f2f;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.12);
+    --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.12);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+}
+
+/* 顶部导航栏 */
+
+.app-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0f172a;
+    color: white;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-md);
+}
+
+.app-bar .title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.app-bar nav a {
+    color: #cbd5f5;
+    text-decoration: none;
+    margin-left: 16px;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-bar nav a:hover {
+    background: rgba(148, 163, 234, 0.2);
+    color: #e5e7ff;
+}
+
+.app-bar nav a.active {
+    background: #2563eb;
+    color: white;
+}
+
+/* 页面整体 */
+
+.page {
+    max-width: 1080px;
+    margin: 16px auto 40px;
+    padding: 0 16px;
+}
+
+.page-header {
+    margin-bottom: 16px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.page-header p {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* 卡片 */
+
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    margin-bottom: 16px;
+}
+
+.card h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.card small {
+    color: var(--text-muted);
+}
+
+/* 表单控件 */
+
+.form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.form-field {
+    flex: 1;
+    min-width: 180px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+input {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    font-size: 14px;
+    outline: none;
+    background: #f9fafb;
+    transition: border 0.15s ease, box-shadow 0.15s ease,
+        background 0.15s ease;
+}
+
+input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+    background: #ffffff;
+}
+
+/* 按钮 */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    background: var(--primary);
+    color: white;
+    margin-top: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+    transition: background 0.15s ease, box-shadow 0.15s ease,
+        transform 0.05s ease;
+}
+
+.btn:hover {
+    background: var(--primary-dark);
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.25);
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+}
+
+.btn.outlined {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+    box-shadow: none;
+}
+
+.btn.outlined:hover {
+    background: rgba(37, 99, 235, 0.06);
+}
+
+/* 当前客户 badge */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 12px;
+    margin-left: 6px;
+}
+
+/* 输出区域 */
+
+.output-card {
+    background: #020617;
+    color: #e5e7eb;
+    border-radius: var(--radius-lg);
+    padding: 10px 12px;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-height: 360px;
+    overflow: auto;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #1e293b;
+}
+
+.output-card .title {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+/* 布局辅助 */
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 16px;
+}
+
+@media (max-width: 800px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}

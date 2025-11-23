@@ -5,7 +5,7 @@ import { fineract, stdDates } from "./fineractClient.js";
 // create account
 export async function createSavingsAccount(req, res) {
     try {
-        const { clientId, productId = 1, openingBalance = 0 } = req.body;
+        const { clientId, productId = 1 } = req.body;
         if (!clientId) return res.status(400).json({ error: "clientId is required" });
 
         const { dateFormat, locale, formatted } = stdDates();
@@ -20,7 +20,7 @@ export async function createSavingsAccount(req, res) {
             interestPostingPeriodType: 4,
             interestCalculationType: 1,
             interestCalculationDaysInYearType: 365,
-            minRequiredOpeningBalance: openingBalance,
+            // minRequiredOpeningBalance: openingBalance,
             lockinPeriodFrequency: 0,
             lockinPeriodFrequencyType: 0,
             withdrawalFeeForTransfers: false,

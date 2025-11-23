@@ -1,5 +1,5 @@
 
-
+import cors from "cors";
 import express from "express";
 import bodyParser from "body-parser";
 import { createClient } from "./controllers/clientController.js";
@@ -17,8 +17,19 @@ import {
     getClientDashboard,
 } from "./controllers/analyticsController.js";
 import { transferBetweenSavings } from "./controllers/paymentController.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import { onboardClient } from "./controllers/onboardingController.js";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
+app.use(express.static(path.join(__dirname, "frontend")));
+
+app.use(cors()); // ← 新增，允许所有来源访问
+
 app.use(bodyParser.json());
 
 // health check
@@ -28,6 +39,15 @@ app.get("/health", (req, res) => {
 
 // clients
 app.post("/clients", createClient);
+
+// 一键开户（创建 client + 储蓄账户 + 批准 + 激活 + 初始存款）
+app.post("/onboard", onboardClient);
+
+app.get("/clients", (req, res) => {
+    res.json({
+        message: "Payment API running normally. Use POST /clients to create a new client."
+    });
+});
 
 // deposit account
 app.post("/accounts", createSavingsAccount);
@@ -48,5 +68,5 @@ app.get("/dashboard/:clientId", getClientDashboard);
 // end restart system
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-    console.log(`🚀 Payment API is running on port ${PORT}`);
+    console.log(`Payment API is running on port ${PORT}`);
 });

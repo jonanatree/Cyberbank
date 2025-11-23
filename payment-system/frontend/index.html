@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>CyberBank – 首页</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="common.js" defer></script>
+    <script defer>
+        window.addEventListener("DOMContentLoaded", () => {
+            initNav("home");
+
+            // 手动切换当前 client
+            const form = document.getElementById("client-switch-form");
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const val = document.getElementById("clientIdInput").value.trim();
+                if (!val) {
+                    alert("请输入 clientId");
+                    return;
+                }
+                const id = Number(val);
+                if (!id) {
+                    alert("clientId 必须是数字");
+                    return;
+                }
+                setCurrentClientId(id);
+            });
+
+            document.getElementById("btn-health").onclick = () => {
+                callApi("/health");
+            };
+        });
+    </script>
+</head>
+
+<body>
+    <header class="app-bar">
+        <div class="title">CyberBank Payment System</div>
+        <nav>
+            <a href="index.html" data-page="home">首页</a>
+            <a href="create-client.html" data-page="client">创建客户</a>
+            <a href="accounts.html" data-page="account">开户</a>
+            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="dashboard.html" data-page="dashboard">Dashboard</a>
+            <a href="transactions.html" data-page="transactions">交易记录</a>
+        </nav>
+    </header>
+
+    <main class="page">
+        <div class="page-header">
+            <h1>欢迎使用 CyberBank Demo</h1>
+            <p>这是一个基于 Fineract 的简易网银前端，用来演示开户、转账和查询。</p>
+        </div>
+
+        <div class="card">
+            <h2>当前客户 <span class="badge" id="currentClientBadge">当前客户：未选择</span></h2>
+            <p><small>所有 Dashboard / 历史查询 都会使用这里的 clientId。</small></p>
+
+            <form id="client-switch-form" class="form-row">
+                <div class="form-field">
+                    <label>clientId</label>
+                    <input id="clientIdInput" placeholder="例如 1, 2, 3 ..." />
+                </div>
+                <div class="form-field" style="align-self: flex-end;">
+                    <button type="submit" class="btn outlined">设为当前客户</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>操作流程</h2>
+                <ol>
+                    <li>在「创建客户」页面创建一个 client。</li>
+                    <li>打开 core bank 后台，为该客户账户 <b>审批 + 激活</b>。</li>
+                    <li>在「开户」页面为该客户创建储蓄账户。</li>
+                    <li>在「转账」页面进行账户间转账。</li>
+                    <li>在「Dashboard」和「交易记录」页面查看数据。</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h2>健康检查</h2>
+                <p><small>确认后端和 Fineract 连接正常。</small></p>
+                <button id="btn-health" class="btn">GET /health</button>
+                <div style="margin-top: 10px;">
+                    <div class="output-card">
+                        <div class="title">输出</div>
+                        <pre id="output"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

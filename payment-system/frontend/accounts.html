@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>CyberBank – 开户</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="common.js" defer></script>
+    <script defer>
+        window.addEventListener("DOMContentLoaded", () => {
+            initNav("account");
+
+            const cid = getCurrentClientId();
+            if (cid) {
+                document.getElementById("clientId").placeholder = `默认使用当前客户 (${cid})`;
+            }
+
+            document.getElementById("account-form").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                let clientIdStr = document.getElementById("clientId").value.trim();
+                const currentCid = getCurrentClientId();
+
+                if (!clientIdStr) {
+                    if (!currentCid) {
+                        alert("没有当前客户，请先在首页或创建客户页选择 clientId");
+                        return;
+                    }
+                    clientIdStr = String(currentCid);
+                }
+
+                const clientId = Number(clientIdStr);
+                const productId = Number(
+                    document.getElementById("productId").value.trim() || "1"
+                );
+                const openingBalance = Number(
+                    document.getElementById("openingBalance").value.trim() || "0"
+                );
+
+                if (!clientId) {
+                    alert("clientId 必须是数字");
+                    return;
+                }
+
+                const body = { clientId, productId, openingBalance };
+
+                const { data } = await callApi("/accounts", {
+                    method: "POST",
+                    body: JSON.stringify(body),
+                });
+
+                if (data && (data.savingsId || data.resourceId)) {
+                    const accId = data.savingsId || data.resourceId;
+                    document.getElementById("createdAccountInfo").textContent =
+                        `开户成功：accountId = ${accId}`;
+                    document.getElementById("accountIdForView").value = accId;
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <header class="app-bar">
+        <div class="title">CyberBank Payment System</div>
+        <nav>
+            <a href="index.html" data-page="home">首页</a>
+            <a href="create-client.html" data-page="client">创建客户</a>
+            <a href="accounts.html" data-page="account">开户</a>
+            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="dashboard.html" data-page="dashboard">Dashboard</a>
+            <a href="transactions.html" data-page="transactions">交易记录</a>
+        </nav>
+    </header>
+
+    <main class="page">
+        <div class="page-header">
+            <h1>开户 <span class="badge" id="currentClientBadge">当前客户：未选择</span></h1>
+            <p>调用 <code>POST /accounts</code> 为客户创建储蓄账户。审批 / 激活在核心银行后台完成。</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>账户参数</h2>
+                <form id="account-form">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>clientId</label>
+                            <input id="clientId" placeholder="留空则使用当前客户" />
+                        </div>
+                        <div class="form-field">
+                            <label>productId</label>
+                            <input id="productId" value="1" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>openingBalance</label>
+                            <input id="openingBalance" value="1000" />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">创建账户</button>
+                </form>
+
+                <p id="createdAccountInfo" style="margin-top: 8px; color: var(--text-muted);"></p>
+
+                <div style="margin-top: 12px;">
+                    <label>用于查看详情的 accountId</label>
+                    <input id="accountIdForView" placeholder="开户成功后会自动填入" />
+                    <div>
+                        <a href="transactions.html" class="btn outlined" style="margin-top: 8px;">去查看交易 / 详情</a>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2>API 输出</h2>
+                    <div class="output-card">
+                        <div class="title">输出</div>
+                        <pre id="output"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
