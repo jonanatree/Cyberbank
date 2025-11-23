@@ -21,6 +21,9 @@ func NewAPI(issuer *Service) *API {
 }
 
 func (a *API) AppendRoutes(r chi.Router) {
+    r.Route("/core", func(r chi.Router) {
+        r.Post("/cards/issue", a.issueCardFromCore)
+    })
     r.Route("/accounts", func(r chi.Router) {
         r.Post("/", a.createAccount)
         r.Route("/{accountID}", func(r chi.Router) {
@@ -87,6 +90,24 @@ func (a *API) issueCard(w http.ResponseWriter, r *http.Request) {
         *models.Card
         CardFace string `json:"card_face"`
     }{card, face})
+}
+
+// issueCardFromCore validates a core savings account, issues a card, and records the mapping.
+func (a *API) issueCardFromCore(w http.ResponseWriter, r *http.Request) {
+    var req models.IssueCardFromCoreRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    resp, err := a.issuer.IssueCardFromCore(r.Context(), req)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    w.Header().Set("Content-Type", "application/json")
+    // Idempotent calls return 200; new issuance also returns 200 to simplify callers.
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(resp)
 }
 
 // setCardholderName allows the user to set a cardholder name after linking with Core Bank.

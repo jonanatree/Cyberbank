@@ -66,7 +66,7 @@ var spec *iso8583.MessageSpec = &iso8583.MessageSpec{
 			Pref:        prefix.ASCII.Fixed,
 		}),
 		8: field.NewString(&field.Spec{
-			Length:      4,
+			Length:      3,
 			Description: "Card Verification Value (CVV)",
 			Enc:         encoding.ASCII,
 			Pref:        prefix.ASCII.Fixed,

@@ -10,10 +10,12 @@ var ErrInsufficientFunds = errors.New("insufficient funds")
 type CreateAccount struct {
 	Balance  int64
 	Currency string
+    CoreAccountID string // corebank internal savings account ID
 }
 
 type Account struct {
 	ID               string
+    CoreAccountID    string // corebank internal savings account ID
 	AvailableBalance int64
 	HoldBalance      int64
 	Currency         string

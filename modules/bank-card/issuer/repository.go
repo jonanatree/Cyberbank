@@ -20,20 +20,30 @@ type Repository struct {
     Cards        []*models.Card
     Accounts     []*models.Account
     Transactions []*models.Transaction
+    Links        []*models.CardAccountLink
 
     mu sync.RWMutex
     panIndex map[string]struct{}
+    cardIndex map[string]*models.Card
+    accountCoreIndex map[string]*models.Account
+    linkByRequest map[string]*models.CardAccountLink
+    linkByCore    map[string]*models.CardAccountLink
     db      *sql.DB
     hashKey []byte
 }
 
 func NewRepository() *Repository {
     return &Repository{
-        Cards:        make([]*models.Card, 0),
-        Accounts:     make([]*models.Account, 0),
-        Transactions: make([]*models.Transaction, 0),
-        panIndex:     make(map[string]struct{}),
-    }
+		Cards:        make([]*models.Card, 0),
+		Accounts:     make([]*models.Account, 0),
+		Transactions: make([]*models.Transaction, 0),
+		panIndex:     make(map[string]struct{}),
+		cardIndex:    make(map[string]*models.Card),
+		accountCoreIndex: make(map[string]*models.Account),
+		Links:        make([]*models.CardAccountLink, 0),
+		linkByRequest: make(map[string]*models.CardAccountLink),
+		linkByCore:    make(map[string]*models.CardAccountLink),
+	}
 }
 
 // NewPGRepository constructs a db-backed repository.
@@ -42,16 +52,22 @@ func NewPGRepository(db *sql.DB, hashKey []byte) *Repository {
 }
 
 func (r *Repository) CreateAccount(account *models.Account) error {
+    if account.CoreAccountID == "" {
+        account.CoreAccountID = account.ID
+    }
     if r.db == nil {
         r.mu.Lock()
         defer r.mu.Unlock()
         r.Accounts = append(r.Accounts, account)
+        if account.CoreAccountID != "" {
+            r.accountCoreIndex[account.CoreAccountID] = account
+        }
         return nil
     }
     _, err := r.db.ExecContext(context.Background(), `
         INSERT INTO issuer.accounts(account_id, core_account_id, currency, available_balance, hold_balance)
         VALUES ($1,$2,$3,$4,$5)
-    `, account.ID, account.ID, strings.ToUpper(account.Currency), account.AvailableBalance, account.HoldBalance)
+    `, account.ID, account.CoreAccountID, strings.ToUpper(account.Currency), account.AvailableBalance, account.HoldBalance)
     return err
 }
 
@@ -78,6 +94,28 @@ func (r *Repository) GetAccount(accountID string) (*models.Account, error) {
     return &models.Account{ID: id, Currency: cur, AvailableBalance: avail, HoldBalance: hold}, nil
 }
 
+// GetAccountByCoreID finds an account by its core_account_id; used for idempotent linkage.
+func (r *Repository) GetAccountByCoreID(coreAccountID string) (*models.Account, error) {
+    if r.db == nil {
+        r.mu.RLock()
+        defer r.mu.RUnlock()
+        if acc, ok := r.accountCoreIndex[coreAccountID]; ok {
+            return acc, nil
+        }
+        return nil, ErrNotFound
+    }
+    row := r.db.QueryRowContext(context.Background(), `SELECT account_id, currency, available_balance, hold_balance FROM issuer.accounts WHERE core_account_id=$1`, coreAccountID)
+    var id, cur string
+    var avail, hold int64
+    if err := row.Scan(&id, &cur, &avail, &hold); err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, ErrNotFound
+        }
+        return nil, err
+    }
+    return &models.Account{ID: id, CoreAccountID: coreAccountID, Currency: cur, AvailableBalance: avail, HoldBalance: hold}, nil
+}
+
 var ErrConflict = fmt.Errorf("conflict")
 
 func (r *Repository) CreateCard(card *models.Card) error {
@@ -89,6 +127,7 @@ func (r *Repository) CreateCard(card *models.Card) error {
         }
         r.Cards = append(r.Cards, card)
         r.panIndex[card.Number] = struct{}{}
+        r.cardIndex[card.ID] = card
         return nil
     }
     panNorm := cardgen.NormalizePAN(card.Number)
@@ -105,6 +144,28 @@ func (r *Repository) CreateCard(card *models.Card) error {
         return ErrConflict
     }
     return err
+}
+
+// GetCard returns a card by ID.
+func (r *Repository) GetCard(cardID string) (*models.Card, error) {
+    if r.db == nil {
+        r.mu.RLock()
+        defer r.mu.RUnlock()
+        if c, ok := r.cardIndex[cardID]; ok {
+            return c, nil
+        }
+        return nil, ErrNotFound
+    }
+    row := r.db.QueryRowContext(context.Background(), `SELECT card_id, account_id, last4, expiry_yymm, status FROM issuer.cards WHERE card_id=$1`, cardID)
+    var id, acc, last4, exp, status string
+    if err := row.Scan(&id, &acc, &last4, &exp, &status); err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, ErrNotFound
+        }
+        return nil, err
+    }
+    // Return masked number; PAN not stored in DB
+    return &models.Card{ID: id, AccountID: acc, Number: "****" + last4, ExpirationDate: exp}, nil
 }
 
 // UpdateCardholderName updates the in-memory cardholder name for a card and returns the updated card.
@@ -355,6 +416,91 @@ func (r *Repository) FindAuthByCardStan(ctx context.Context, cardID string, stan
 func (r *Repository) Ping(ctx context.Context) error {
     if r.db == nil { return nil }
     return r.db.PingContext(ctx)
+}
+
+// CreateCardAccountLink persists the mapping between card and core account with idempotency enforcement.
+func (r *Repository) CreateCardAccountLink(ctx context.Context, link *models.CardAccountLink) error {
+	if r.db == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if _, ok := r.linkByRequest[link.RequestID]; ok {
+			return ErrConflict
+		}
+		if _, ok := r.linkByCore[link.CoreAccountID]; ok {
+			return ErrConflict
+		}
+		r.Links = append(r.Links, link)
+		r.linkByRequest[link.RequestID] = link
+		r.linkByCore[link.CoreAccountID] = link
+        return nil
+	}
+	_, err := r.db.ExecContext(ctx, `
+      INSERT INTO issuer.card_account_links(card_id, core_account_id, account_no, external_id, customer_id, product_id, currency_code, activated_on, core_status, core_sub_status, link_status, request_id, last_core_sync_at, last_core_sync_result)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+    `, link.CardID, link.CoreAccountID, link.AccountNo, link.ExternalID, link.CustomerID, nullIfZero(link.ProductID), link.CurrencyCode, link.ActivatedOn, link.CoreStatus, link.CoreSubStatus, link.LinkStatus, link.RequestID, link.LastCoreSyncAt, link.LastCoreSyncResult)
+	if isUniqueViolation(err) {
+		return ErrConflict
+	}
+	return err
+}
+
+func nullIfZero(v int64) any {
+    if v == 0 {
+        return nil
+    }
+    return v
+}
+
+// FindLinkByRequest returns mapping by request id.
+func (r *Repository) FindLinkByRequest(ctx context.Context, requestID string) (*models.CardAccountLink, error) {
+    if r.db == nil {
+        r.mu.RLock()
+        defer r.mu.RUnlock()
+        if l, ok := r.linkByRequest[requestID]; ok {
+            return l, nil
+        }
+        return nil, ErrNotFound
+    }
+	row := r.db.QueryRowContext(ctx, `
+      select card_id, core_account_id, account_no, external_id, customer_id, coalesce(product_id,0), currency_code, activated_on, core_status, core_sub_status, link_status, request_id, last_core_sync_at, last_core_sync_result
+      from issuer.card_account_links where request_id=$1
+    `, requestID)
+	return scanLink(row)
+}
+
+// FindLinkByCore returns mapping by core account id.
+func (r *Repository) FindLinkByCore(ctx context.Context, coreAccountID string) (*models.CardAccountLink, error) {
+    if r.db == nil {
+        r.mu.RLock()
+        defer r.mu.RUnlock()
+        if l, ok := r.linkByCore[coreAccountID]; ok {
+            return l, nil
+        }
+        return nil, ErrNotFound
+    }
+	row := r.db.QueryRowContext(ctx, `
+      select card_id, core_account_id, account_no, external_id, customer_id, coalesce(product_id,0), currency_code, activated_on, core_status, core_sub_status, link_status, request_id, last_core_sync_at, last_core_sync_result
+      from issuer.card_account_links where core_account_id=$1
+    `, coreAccountID)
+	return scanLink(row)
+}
+
+func scanLink(row *sql.Row) (*models.CardAccountLink, error) {
+	var l models.CardAccountLink
+	var activated, lastSync sql.NullTime
+	if err := row.Scan(&l.CardID, &l.CoreAccountID, &l.AccountNo, &l.ExternalID, &l.CustomerID, &l.ProductID, &l.CurrencyCode, &activated, &l.CoreStatus, &l.CoreSubStatus, &l.LinkStatus, &l.RequestID, &lastSync, &l.LastCoreSyncResult); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	if activated.Valid {
+		l.ActivatedOn = &activated.Time
+	}
+	if lastSync.Valid {
+		l.LastCoreSyncAt = &lastSync.Time
+	}
+	return &l, nil
 }
 
 func isUniqueViolation(err error) bool {

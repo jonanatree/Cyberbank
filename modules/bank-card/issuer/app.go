@@ -11,6 +11,7 @@ import (
     "os"
     "database/sql"
     "strconv"
+    "strings"
 
     "github.com/alovak/cardflow-playground/internal/middleware"
     "github.com/alovak/cardflow-playground/internal/expiry"
@@ -53,6 +54,34 @@ func (a *App) Start() error {
     // setup the issuer
     router := chi.NewRouter()
     router.Use(middleware.NewStructuredLogger(a.logger))
+    if v := getenv("DEFAULT_CURRENCY", a.config.DefaultCurrencyCode); v != "" {
+        a.config.DefaultCurrencyCode = v
+    }
+    if v := getenv("COREBANK_BASE_URL", a.config.CoreBankBaseURL); v != "" {
+        a.config.CoreBankBaseURL = v
+    }
+    if v := getenv("COREBANK_AUTH_TOKEN", a.config.CoreBankAuthToken); v != "" {
+        a.config.CoreBankAuthToken = v
+    }
+    if v := getenv("COREBANK_TENANT_ID", a.config.CoreBankTenantID); v != "" {
+        a.config.CoreBankTenantID = v
+    }
+    if v := getenv("COREBANK_TIMEOUT_SECONDS", ""); v != "" {
+        if n, err := strconv.Atoi(v); err == nil {
+            a.config.CoreBankTimeoutSeconds = n
+        }
+    }
+    if v := getenv("COREBANK_FORBIDDEN_SUBSTATUS", ""); v != "" {
+        parts := strings.Split(v, ",")
+        var cleaned []string
+        for _, p := range parts {
+            p = strings.TrimSpace(p)
+            if p != "" { cleaned = append(cleaned, p) }
+        }
+        if len(cleaned) > 0 {
+            a.config.ForbiddenSubStatus = cleaned
+        }
+    }
     // Choose repository backend: default to pg for runtime; allow mem only when explicitly enabled for tests
     var repository *Repository
     backend := getenv("REPO_BACKEND", "pg")

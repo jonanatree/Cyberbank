@@ -5,3 +5,9 @@ build/
 coverage/
 out/
 *.log
+
+.env
+
+.env.sample
+
+docs/

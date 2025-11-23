@@ -69,7 +69,7 @@ var spec *iso8583.MessageSpec = &iso8583.MessageSpec{
 			Pref:        prefix.BCD.Fixed,
 		}),
 		8: field.NewString(&field.Spec{
-			Length:      4,
+			Length:      3,
 			Description: "Card Verification Value (CVV)",
 			Enc:         encoding.BCD,
 			Pref:        prefix.BCD.Fixed,
@@ -161,7 +161,7 @@ func TestMessagePackingAndUnpacking(t *testing.T) {
 		Amount:              1000,
 		TransactionDatetime: processingTime.Format("060102150405"),
 		Currency:            "840",
-		CVV:                 "7890",
+		CVV:                 "789",
 		ExpirationDate:      "2512",
 		AcceptorInformation: &AcceptorInformation{
 			MerchantName:         "Merchant Name",
@@ -193,7 +193,7 @@ func TestMessagePackingAndUnpacking(t *testing.T) {
 	require.Equal(t, int64(1000), authorizationRequest.Amount)
 	require.Equal(t, timeFromExample, authorizationRequest.TransactionDatetime)
 	require.Equal(t, "840", authorizationRequest.Currency)
-	require.Equal(t, "7890", authorizationRequest.CVV)
+	require.Equal(t, "789", authorizationRequest.CVV)
 	require.Equal(t, "2512", authorizationRequest.ExpirationDate)
 	require.Equal(t, "Merchant Name", authorizationRequest.AcceptorInformation.MerchantName)
 	require.Equal(t, "1234", authorizationRequest.AcceptorInformation.MerchantCategoryCode)
@@ -202,7 +202,7 @@ func TestMessagePackingAndUnpacking(t *testing.T) {
 	require.Equal(t, "000001", authorizationRequest.STAN)
 
 	// Here is the example of the packed message
-	examplePackedMessage := "010073E000000000000031364242424242424242001000240812160140084078902512303636303131334D65726368616E74204E616D653032313233343033313031323334353637383930303430323468747470733A2F2F7777772E6D65726368616E742E636F6D000001"
+	examplePackedMessage := "010073E000000000000031364242424242424242001000240812160140084007892512303636303131334D65726368616E74204E616D653032313233343033313031323334353637383930303430323468747470733A2F2F7777772E6D65726368616E742E636F6D000001"
 
 	// Check the packed message
 	// using %X to convert the byte slice to a hex string in uppercase

@@ -1,33 +1,42 @@
 package issuer
 
 import (
+    "context"
     "errors"
     "fmt"
     "math/rand"
+    "strings"
     "time"
-    "context"
 
+    "github.com/alovak/cardflow-playground/internal/cardgen"
+    "github.com/alovak/cardflow-playground/internal/expiry"
+    "github.com/alovak/cardflow-playground/issuer/corebank"
     "github.com/alovak/cardflow-playground/issuer/models"
     "github.com/google/uuid"
-    "github.com/alovak/cardflow-playground/internal/expiry"
-    "github.com/alovak/cardflow-playground/internal/cardgen"
 )
 
 type Service struct {
     repo *Repository
     cfg  *Config
+    core *corebank.Client
 }
 
 func NewService(repo *Repository, cfg *Config) *Service {
+    var cb *corebank.Client
+    if cfg != nil && cfg.CoreBankBaseURL != "" {
+        cb = corebank.NewClient(cfg.CoreBankBaseURL, cfg.CoreBankAuthToken, cfg.CoreBankTenantID, cfg.coreBankTimeout())
+    }
     return &Service{
         repo: repo,
         cfg:  cfg,
+        core: cb,
     }
 }
 
 func (i *Service) CreateAccount(req models.CreateAccount) (*models.Account, error) {
 	account := &models.Account{
 		ID:               uuid.New().String(),
+        CoreAccountID:    req.CoreAccountID,
 		AvailableBalance: req.Balance,
 		Currency:         req.Currency,
 	}
@@ -81,7 +90,7 @@ func (i *Service) IssueCard(accountID string) (*models.Card, error) {
             AccountID:             accountID,
             Number:                pan,
             ExpirationDate:        expYYMM, // DB expects YYMM
-            // CVV should be a random 3-digit value
+            // CVV is 3-digit per requirement
             CardVerificationValue: generateRandomNumber(3),
         }
         err = i.repo.CreateCard(card)
@@ -102,6 +111,172 @@ func (i *Service) IssueCard(accountID string) (*models.Card, error) {
         return nil, fmt.Errorf("creating card: %w", err)
     }
     return nil, fmt.Errorf("could not create unique card after retries")
+}
+
+// IssueCardFromCore fetches a core savings account, validates it, and issues a card bound to it.
+func (i *Service) IssueCardFromCore(ctx context.Context, req models.IssueCardFromCoreRequest) (*models.IssueCardFromCoreResponse, error) {
+    if i.core == nil {
+        return nil, fmt.Errorf("core bank client not configured")
+    }
+    if req.RequestID == "" {
+        return nil, fmt.Errorf("request_id is required")
+    }
+    if req.CoreAccountID == "" {
+        return nil, fmt.Errorf("core_account_id is required and must be corebank internal ID")
+    }
+    // Idempotency: request_id first
+    if link, err := i.repo.FindLinkByRequest(ctx, req.RequestID); err == nil {
+        return i.buildResponseFromLink(ctx, link)
+    } else if err != nil && !errors.Is(err, ErrNotFound) {
+        return nil, err
+    }
+
+    coreID := req.CoreAccountID
+    // Idempotency by core account id
+    if link, err := i.repo.FindLinkByCore(ctx, coreID); err == nil {
+        return i.buildResponseFromLink(ctx, link)
+    } else if err != nil && !errors.Is(err, ErrNotFound) {
+        return nil, err
+    }
+
+    coreAcct, err := i.core.GetSavingsAccount(ctx, coreID, req.ExternalID)
+    if err != nil {
+        return nil, fmt.Errorf("fetch core savings account: %w", err)
+    }
+    if !coreAcct.Status.Active {
+        return nil, fmt.Errorf("CORE_ACCOUNT_NOT_ACTIVE:%s", coreAcct.Status.Code)
+    }
+    forbidden := i.cfg.forbiddenSubStatusSet()
+    subCode := strings.ToUpper(coreAcct.SubStatus.Code)
+    if _, blocked := forbidden[subCode]; blocked {
+        return nil, fmt.Errorf("CORE_ACCOUNT_BLOCKED:%s", coreAcct.SubStatus.Code)
+    }
+    actDateStr, actDate := toDate(coreAcct.Timeline.ActivatedOnDate)
+    if actDateStr == "" {
+        return nil, fmt.Errorf("CORE_ACCOUNT_NOT_ACTIVATED")
+    }
+
+    customerID := coreAcct.ClientID
+    if req.CustomerID != 0 && customerID != 0 && req.CustomerID != customerID {
+        return nil, fmt.Errorf("customer_id mismatch core=%d request=%d", customerID, req.CustomerID)
+    }
+    if customerID == 0 {
+        customerID = req.CustomerID
+    }
+    currency := coreAcct.Currency.Code
+    if currency == "" && i.cfg != nil {
+        currency = i.cfg.DefaultCurrency()
+    }
+    if currency == "" {
+        currency = "USD"
+    }
+    currency = strings.ToUpper(currency)
+
+    account, err := i.repo.GetAccountByCoreID(coreID)
+    if err != nil && !errors.Is(err, ErrNotFound) {
+        return nil, err
+    }
+    if account == nil {
+        account = &models.Account{
+            ID:            uuid.New().String(),
+            CoreAccountID: coreID,
+            Currency:      currency,
+        }
+        if err := i.repo.CreateAccount(account); err != nil {
+            return nil, fmt.Errorf("creating issuer account: %w", err)
+        }
+    }
+
+    card, err := i.IssueCard(account.ID)
+    if err != nil {
+        return nil, err
+    }
+
+    now := time.Now().UTC()
+    link := &models.CardAccountLink{
+        CardID:        card.ID,
+        CoreAccountID: coreID,
+        AccountNo:     coreAcct.AccountNo,
+        ExternalID:    coreAcct.ExternalID,
+        CustomerID:    customerID,
+        ProductID:     coreAcct.SavingsProductID,
+        CurrencyCode:  currency,
+        ActivatedOn:   actDate,
+        CoreStatus:    coreAcct.Status.Code,
+        CoreSubStatus: coreAcct.SubStatus.Code,
+        LinkStatus:    "BOUND",
+        RequestID:     req.RequestID,
+        LastCoreSyncAt: &now,
+        LastCoreSyncResult: "OK",
+    }
+    if err := i.repo.CreateCardAccountLink(ctx, link); err != nil {
+        if errors.Is(err, ErrConflict) {
+            if existing, findErr := i.repo.FindLinkByCore(ctx, coreID); findErr == nil {
+                return i.buildResponseFromLink(ctx, existing)
+            }
+        }
+        return nil, fmt.Errorf("persist mapping: %w", err)
+    }
+
+    face := formatCardFace(card.ExpirationDate, card.CardholderName)
+    return &models.IssueCardFromCoreResponse{
+        CardID:        card.ID,
+        CardFace:      face,
+        CoreAccountID: coreID,
+        AccountNo:     coreAcct.AccountNo,
+        ExternalID:    coreAcct.ExternalID,
+        CustomerID:    customerID,
+        ProductID:     coreAcct.SavingsProductID,
+        CurrencyCode:  currency,
+        ActivatedOn:   actDateStr,
+        CoreStatus:    coreAcct.Status.Code,
+        CoreSubStatus: coreAcct.SubStatus.Code,
+        LinkStatus:    link.LinkStatus,
+        LastCoreSyncAt: now.Format(time.RFC3339),
+        LastCoreSyncResult: link.LastCoreSyncResult,
+        RequestID:     req.RequestID,
+    }, nil
+}
+
+func (i *Service) buildResponseFromLink(ctx context.Context, link *models.CardAccountLink) (*models.IssueCardFromCoreResponse, error) {
+    card, err := i.repo.GetCard(link.CardID)
+    if err != nil {
+        return nil, fmt.Errorf("load card for mapping: %w", err)
+    }
+    face := formatCardFace(card.ExpirationDate, card.CardholderName)
+    activated := ""
+    if link.ActivatedOn != nil {
+        activated = link.ActivatedOn.Format("2006-01-02")
+    }
+    lastSync := ""
+    if link.LastCoreSyncAt != nil {
+        lastSync = link.LastCoreSyncAt.Format(time.RFC3339)
+    }
+    return &models.IssueCardFromCoreResponse{
+        CardID:        link.CardID,
+        CardFace:      face,
+        CoreAccountID: link.CoreAccountID,
+        AccountNo:     link.AccountNo,
+        ExternalID:    link.ExternalID,
+        CustomerID:    link.CustomerID,
+        ProductID:     link.ProductID,
+        CurrencyCode:  link.CurrencyCode,
+        ActivatedOn:   activated,
+        CoreStatus:    link.CoreStatus,
+        CoreSubStatus: link.CoreSubStatus,
+        LinkStatus:    link.LinkStatus,
+        LastCoreSyncAt: lastSync,
+        LastCoreSyncResult: link.LastCoreSyncResult,
+        RequestID:     link.RequestID,
+    }, nil
+}
+
+func toDate(parts []int) (string, *time.Time) {
+    if len(parts) >= 3 && parts[0] > 0 && parts[1] > 0 && parts[2] > 0 {
+        t := time.Date(parts[0], time.Month(parts[1]), parts[2], 0, 0, 0, 0, time.UTC)
+        return t.Format("2006-01-02"), &t
+    }
+    return "", nil
 }
 
 // ListTransactions returns a list of transactions for the given account ID.
