@@ -1,5 +1,7 @@
 // controllers/onboardingController.js
 import { fineract, stdDates } from "./fineractClient.js";
+import { fullCardIssuance } from "./cardClient.js";
+
 
 export async function onboardClient(req, res) {
     try {
@@ -97,6 +99,21 @@ export async function onboardClient(req, res) {
                 `/savingsaccounts/${savingsAccountId}/transactions?command=deposit`,
                 depositPayload
             );
+        }
+
+        let card = null;
+        try {
+            card = await fullCardIssuance({
+                holderName: `${firstname} ${lastname}`,
+                initialBalance: 0, // 这里只是卡系统里的账户余额，你可以先设 0
+                currency: "AUD",
+            });
+        } catch (e) {
+            console.error(
+                "Issue card during onboard failed:",
+                e.response?.data || e.message
+            );
+            card = null;
         }
 
         // 6️⃣ 返回结果（你关心的 clientId、savingsAccountId）
