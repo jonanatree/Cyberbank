@@ -1,6 +1,40 @@
+# version: "3.9"
+
+# services:
+#   payment-api:
+#     build: .
+#     container_name: payment-api
+#     ports:
+#       - "8080:8080"
+#     environment:
+#       - FINERACT_URL=${FINERACT_URL}
+#       - FINERACT_TENANT=${FINERACT_TENANT}
+#       - FINERACT_USER=${FINERACT_USER}
+#       - FINERACT_PASSWORD=${FINERACT_PASSWORD}
+#       - NODE_TLS_REJECT_UNAUTHORIZED=0
+#     networks:
+#       - corebank
+
+# networks:
+#   corebank:
+#     external: true
+#     name: core_bank_default
+
 version: "3.9"
 
 services:
+  cards-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: cards_db
+      POSTGRES_USER: cards_user
+      POSTGRES_PASSWORD: cards_password
+    volumes:
+      - cards-db-data:/var/lib/postgresql/data
+    networks:
+      - corebank
+
   payment-api:
     build: .
     container_name: payment-api
@@ -12,6 +46,10 @@ services:
       - FINERACT_USER=${FINERACT_USER}
       - FINERACT_PASSWORD=${FINERACT_PASSWORD}
       - NODE_TLS_REJECT_UNAUTHORIZED=0
+
+      - DATABASE_URL=postgres://cards_user:cards_password@cards-db:5432/cards_db
+    depends_on:
+      - cards-db
     networks:
       - corebank
 
@@ -19,3 +57,6 @@ networks:
   corebank:
     external: true
     name: core_bank_default
+
+volumes:
+  cards-db-data:
