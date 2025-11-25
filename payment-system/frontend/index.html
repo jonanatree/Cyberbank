@@ -3,25 +3,25 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>CyberBank – 首页</title>
+    <title>CyberBank – Home</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="common.js" defer></script>
     <script defer>
         window.addEventListener("DOMContentLoaded", () => {
             initNav("home");
 
-            // 手动切换当前 client
+            // Manually switch current client
             const form = document.getElementById("client-switch-form");
             form.addEventListener("submit", (e) => {
                 e.preventDefault();
                 const val = document.getElementById("clientIdInput").value.trim();
                 if (!val) {
-                    alert("请输入 clientId");
+                    alert("Please enter a clientId");
                     return;
                 }
                 const id = Number(val);
                 if (!id) {
-                    alert("clientId 必须是数字");
+                    alert("clientId must be a number");
                     return;
                 }
                 setCurrentClientId(id);
@@ -38,55 +38,56 @@
     <header class="app-bar">
         <div class="title">CyberBank Payment System</div>
         <nav>
-            <a href="index.html" data-page="home">首页</a>
-            <a href="create-client.html" data-page="client">创建客户</a>
-            <a href="accounts.html" data-page="account">开户</a>
-            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="index.html" data-page="home">Home</a>
+            <a href="create-client.html" data-page="client">Quick Onboard</a>
+            <a href="accounts.html" data-page="account">Open Account</a>
+            <a href="transfer.html" data-page="transfer">Transfer</a>
             <a href="dashboard.html" data-page="dashboard">Dashboard</a>
-            <a href="transactions.html" data-page="transactions">交易记录</a>
+            <a href="transactions.html" data-page="transactions">History</a>
         </nav>
     </header>
 
     <main class="page">
         <div class="page-header">
-            <h1>欢迎使用 CyberBank Demo</h1>
-            <p>这是一个基于 Fineract 的简易网银前端，用来演示开户、转账和查询。</p>
+            <h1>Welcome to CyberBank Demo</h1>
+            <p>This is a simple Fineract-based frontend demo to demonstrate onboarding, transfers, and inquiries.</p>
         </div>
 
         <div class="card">
-            <h2>当前客户 <span class="badge" id="currentClientBadge">当前客户：未选择</span></h2>
-            <p><small>所有 Dashboard / 历史查询 都会使用这里的 clientId。</small></p>
+            <h2>Current Client <span class="badge" id="currentClientBadge">Current Client: None</span></h2>
+            <p><small>All Dashboards / History queries will use this clientId by default.</small></p>
 
             <form id="client-switch-form" class="form-row">
                 <div class="form-field">
                     <label>clientId</label>
-                    <input id="clientIdInput" placeholder="例如 1, 2, 3 ..." />
+                    <input id="clientIdInput" placeholder="e.g. 1, 2, 3 ..." />
                 </div>
                 <div class="form-field" style="align-self: flex-end;">
-                    <button type="submit" class="btn outlined">设为当前客户</button>
+                    <button type="submit" class="btn outlined">Set as Current Client</button>
                 </div>
             </form>
         </div>
 
         <div class="grid-2">
             <div class="card">
-                <h2>操作流程</h2>
+                <h2>Workflow</h2>
                 <ol>
-                    <li>在「创建客户」页面创建一个 client。</li>
-                    <li>打开 core bank 后台，为该客户账户 <b>审批 + 激活</b>。</li>
-                    <li>在「开户」页面为该客户创建储蓄账户。</li>
-                    <li>在「转账」页面进行账户间转账。</li>
-                    <li>在「Dashboard」和「交易记录」页面查看数据。</li>
+                    <li>Create a client on the <b>Quick Onboard</b> page.</li>
+                    <li>Open Core Bank backend to <b>Approve + Activate</b> the client account (if not done
+                        automatically).</li>
+                    <li>Create a savings account for the client on the <b>Open Account</b> page.</li>
+                    <li>Perform transfers between accounts on the <b>Transfer</b> page.</li>
+                    <li>View data on the <b>Dashboard</b> and <b>History</b> pages.</li>
                 </ol>
             </div>
 
             <div class="card">
-                <h2>健康检查</h2>
-                <p><small>确认后端和 Fineract 连接正常。</small></p>
+                <h2>Health Check</h2>
+                <p><small>Verify connection to Backend and Fineract.</small></p>
                 <button id="btn-health" class="btn">GET /health</button>
                 <div style="margin-top: 10px;">
                     <div class="output-card">
-                        <div class="title">输出</div>
+                        <div class="title">Output</div>
                         <pre id="output"></pre>
                     </div>
                 </div>

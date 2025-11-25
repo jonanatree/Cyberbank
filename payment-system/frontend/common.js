@@ -1,6 +1,6 @@
-// 公共 JS，所有页面共用
+// Common JS, shared across pages
 
-const apiBase = ""; // 同域，空就行
+const apiBase = ""; // Same domain, leave empty
 
 function getCurrentClientId() {
     const raw = window.localStorage.getItem("currentClientId");
@@ -23,17 +23,17 @@ function updateCurrentClientBadge() {
     if (!badge) return;
     const cid = getCurrentClientId();
     if (!cid) {
-        badge.textContent = "当前客户：未选择";
+        badge.textContent = "Current Client: None";
     } else {
-        badge.textContent = `当前客户：#${cid}`;
+        badge.textContent = `Current Client: #${cid}`;
     }
 }
 
-// 通用 API 调用 + 输出
+// Generic API call + Output
 async function callApi(path, options = {}) {
     const out = document.getElementById("output");
     if (out) {
-        out.textContent = `请求：${options.method || "GET"} ${path}\n\n…`;
+        out.textContent = `Request: ${options.method || "GET"} ${path}\n\n…`;
     }
 
     try {
@@ -59,14 +59,14 @@ async function callApi(path, options = {}) {
         return { res, data };
     } catch (err) {
         if (out) {
-            out.textContent = `请求失败：${err.message}`;
+            out.textContent = `Request Failed: ${err.message}`;
         }
         console.error(err);
         return null;
     }
 }
 
-// 高亮导航（根据 data-page 属性）
+// Highlight Navigation (based on data-page attribute)
 function initNav(pageKey) {
     const links = document.querySelectorAll(".app-bar nav a");
     links.forEach((a) => {

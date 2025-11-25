@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>CyberBank – 交易记录</title>
+    <title>CyberBank – Transactions</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="common.js" defer></script>
     <script defer>
@@ -12,13 +12,13 @@
 
             document.getElementById("btn-details").onclick = () => {
                 const id = document.getElementById("accountId").value.trim();
-                if (!id) return alert("请输入 accountId");
+                if (!id) return alert("Please enter an accountId");
                 callApi(`/accounts/${encodeURIComponent(id)}/details`);
             };
 
             document.getElementById("btn-txns").onclick = () => {
                 const id = document.getElementById("accountId").value.trim();
-                if (!id) return alert("请输入 accountId");
+                if (!id) return alert("Please enter an accountId");
                 callApi(`/accounts/${encodeURIComponent(id)}/transactions`);
             };
         });
@@ -29,39 +29,40 @@
     <header class="app-bar">
         <div class="title">CyberBank Payment System</div>
         <nav>
-            <a href="index.html" data-page="home">首页</a>
-            <a href="create-client.html" data-page="client">创建客户</a>
-            <a href="accounts.html" data-page="account">开户</a>
-            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="index.html" data-page="home">Home</a>
+            <a href="create-client.html" data-page="client">Quick Onboard</a>
+            <a href="accounts.html" data-page="account">Open Account</a>
+            <a href="transfer.html" data-page="transfer">Transfer</a>
             <a href="dashboard.html" data-page="dashboard">Dashboard</a>
-            <a href="transactions.html" data-page="transactions">交易记录</a>
+            <a href="transactions.html" data-page="transactions">History</a>
         </nav>
     </header>
 
     <main class="page">
         <div class="page-header">
-            <h1>账户详情 / 交易记录 <span class="badge" id="currentClientBadge">当前客户：未选择</span></h1>
-            <p>调用 <code>/accounts/:id/details</code> 和 <code>/accounts/:id/transactions</code>。</p>
+            <h1>Account Details / Transactions <span class="badge" id="currentClientBadge">Current Client: None</span>
+            </h1>
+            <p>Calls <code>/accounts/:id/details</code> and <code>/accounts/:id/transactions</code>.</p>
         </div>
 
         <div class="grid-2">
             <div class="card">
-                <h2>选择账户</h2>
+                <h2>Select Account</h2>
                 <div class="form-row">
                     <div class="form-field">
                         <label>accountId</label>
-                        <input id="accountId" placeholder="例如开户返回的 accountId" />
+                        <input id="accountId" placeholder="e.g. accountId from onboarding" />
                     </div>
                 </div>
-                <button id="btn-details" class="btn">查看详情</button>
-                <button id="btn-txns" class="btn outlined">查看交易记录</button>
+                <button id="btn-details" class="btn">View Details</button>
+                <button id="btn-txns" class="btn outlined">View Transactions</button>
             </div>
 
             <div>
                 <div class="card">
-                    <h2>API 输出</h2>
+                    <h2>API Output</h2>
                     <div class="output-card">
-                        <div class="title">输出</div>
+                        <div class="title">Output</div>
                         <pre id="output"></pre>
                     </div>
                 </div>

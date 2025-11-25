@@ -13,7 +13,7 @@
             const cid = getCurrentClientId();
             const input = document.getElementById("clientId");
             if (cid) {
-                input.placeholder = `默认使用当前客户 (${cid})`;
+                input.placeholder = `Default: Current Client (${cid})`;
             }
 
             document.getElementById("btn-dashboard").onclick = () => {
@@ -21,14 +21,14 @@
                 const current = getCurrentClientId();
                 if (!idStr) {
                     if (!current) {
-                        alert("请先在首页或创建客户页设置当前客户，或手动输入 clientId");
+                        alert("Please set a current client first, or enter a clientId manually.");
                         return;
                     }
                     idStr = String(current);
                 }
                 const id = Number(idStr);
                 if (!id) {
-                    alert("clientId 必须是数字");
+                    alert("clientId must be a number");
                     return;
                 }
                 callApi(`/dashboard/${encodeURIComponent(id)}`);
@@ -39,17 +39,45 @@
                 const current = getCurrentClientId();
                 if (!idStr) {
                     if (!current) {
-                        alert("请先在首页或创建客户页设置当前客户，或手动输入 clientId");
+                        alert("Please set a current client first, or enter a clientId manually.");
                         return;
                     }
                     idStr = String(current);
                 }
                 const id = Number(idStr);
                 if (!id) {
-                    alert("clientId 必须是数字");
+                    alert("clientId must be a number");
                     return;
                 }
                 callApi(`/payments/history?clientId=${encodeURIComponent(id)}`);
+            };
+            const cardInput = document.getElementById("cardNumber");
+            const btnByCard = document.getElementById("btn-dashboard-card");
+
+            if (cardInput && btnByCard) {
+                btnByCard.onclick = async () => {
+                    const card = cardInput.value.trim();
+                    if (!card) {
+                        alert("Please enter a card number");
+                        return;
+                    }
+
+                    const lookupResult = await callApi(
+                        `/cards/lookup?number=${encodeURIComponent(card)}`
+                    );
+
+                    if (!lookupResult) return;
+
+                    const { data } = lookupResult;
+                    if (!data || !data.clientId) {
+                        alert("Card not found in registry. Please check the card number.");
+                        return;
+                    }
+
+                    setCurrentClientId(data.clientId);
+
+                    await callApi(`/dashboard/${encodeURIComponent(data.clientId)}`);
+                };
             };
         });
     </script>
@@ -59,39 +87,64 @@
     <header class="app-bar">
         <div class="title">CyberBank Payment System</div>
         <nav>
-            <a href="index.html" data-page="home">首页</a>
-            <a href="create-client.html" data-page="client">创建客户</a>
-            <a href="accounts.html" data-page="account">开户</a>
-            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="index.html" data-page="home">Home</a>
+            <a href="create-client.html" data-page="client">Quick Onboard</a>
+            <a href="accounts.html" data-page="account">Open Account</a>
+            <a href="transfer.html" data-page="transfer">Transfer</a>
             <a href="dashboard.html" data-page="dashboard">Dashboard</a>
-            <a href="transactions.html" data-page="transactions">交易记录</a>
+            <a href="transactions.html" data-page="transactions">History</a>
         </nav>
     </header>
 
     <main class="page">
         <div class="page-header">
-            <h1>客户 Dashboard <span class="badge" id="currentClientBadge">当前客户：未选择</span></h1>
-            <p>根据 clientId 调用 <code>/dashboard/:clientId</code> 和 <code>/payments/history</code>。</p>
+            <h1>Client Dashboard <span class="badge" id="currentClientBadge">Current Client: None</span></h1>
+            <p>Fetch via clientId: <code>/dashboard/:clientId</code> and <code>/payments/history</code>.</p>
         </div>
 
         <div class="grid-2">
             <div class="card">
-                <h2>选择客户</h2>
+                <h2>Select Client</h2>
                 <div class="form-row">
                     <div class="form-field">
                         <label>clientId</label>
-                        <input id="clientId" placeholder="留空则使用当前客户" />
+                        <input id="clientId" placeholder="Leave empty to use current client" />
                     </div>
                 </div>
-                <button id="btn-dashboard" class="btn">查看 Dashboard</button>
-                <button id="btn-history" class="btn outlined">查看支付历史</button>
+                <button id="btn-dashboard" class="btn">View Dashboard</button>
+                <button id="btn-history" class="btn outlined">View Payment History</button>
+            </div>
+
+
+            <div class="card">
+                <h2>View Dashboard by Card Number</h2>
+                <p>Enter a card number. The backend will look up the client and return dashboard data.</p>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Card Number</label>
+                        <input id="cardNumber" placeholder="e.g.: 4212 3476 0305 0569" />
+                    </div>
+                </div>
+
+                <button id="btn-dashboard-card" class="btn">
+                    View by Card Number
+                </button>
+            </div>
+
+            <div class="card"
+                style="background: linear-gradient(135deg, #2563eb, #1e40af); color: white; border: none;">
+                <h2 style="color: white; border-left: none; margin-bottom: 8px; padding:0; opacity: 0.9;">Total Asset
+                    Valuation</h2>
+                <div style="font-size: 32px; font-weight: 700;">$ 12,450.00</div>
+                <div style="font-size: 13px; opacity: 0.8; margin-top: 4px;">**** **** **** 8829</div>
             </div>
 
             <div>
                 <div class="card">
-                    <h2>API 输出</h2>
+                    <h2>API Output</h2>
                     <div class="output-card">
-                        <div class="title">输出</div>
+                        <div class="title">Output</div>
                         <pre id="output"></pre>
                     </div>
                 </div>

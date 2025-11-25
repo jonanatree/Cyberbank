@@ -3,16 +3,20 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>CyberBank – 一键开户（创建客户 + 账户）</title>
+    <title>CyberBank – Quick Onboarding</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="common.js" defer></script>
     <script defer>
         window.addEventListener("DOMContentLoaded", () => {
-            // 高亮导航栏的“创建客户”这一项
             initNav("client");
 
             const form = document.getElementById("onboard-form");
             const infoEl = document.getElementById("onboardInfo");
+
+            const applyCardBtn = document.getElementById("apply-card-btn");
+            const cardInfoEl = document.getElementById("cardInfo");
+
+            let lastOnboardData = null;
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
@@ -23,14 +27,13 @@
                 const productIdStr = document.getElementById("productId").value.trim();
 
                 if (!firstname || !lastname) {
-                    alert("Firstname 和 Lastname 不能为空");
+                    alert("Firstname and Lastname are required");
                     return;
                 }
 
                 const openingBalance = Number(openingBalanceStr || "0");
                 const productId = Number(productIdStr || "1");
 
-                // 调用一键开户接口：POST /onboard
                 const result = await callApi("/onboard", {
                     method: "POST",
                     body: JSON.stringify({
@@ -41,14 +44,15 @@
                     }),
                 });
 
-                if (!result) return; // callApi 已经输出错误
+                if (!result) return;
 
                 const { data } = result;
+                lastOnboardData = data || null;
 
-                // 根据后端返回结构更新页面
                 if (data && data.clientId) {
-                    setCurrentClientId(data.clientId); // 设置当前 client
-                    let msg = `✅ 一键开户成功\n`;
+                    setCurrentClientId(data.clientId);
+
+                    let msg = `✅ Account created successfully\n`;
                     msg += `clientId = ${data.clientId}\n`;
                     if (data.savingsAccountId) {
                         msg += `savingsAccountId = ${data.savingsAccountId}\n`;
@@ -56,9 +60,64 @@
                     if (typeof data.initialDeposit === "number") {
                         msg += `initialDeposit = ${data.initialDeposit}\n`;
                     }
+
+                    if (data.card) {
+                        msg += `\n💳 Card Info：\n`;
+                        msg += `cardNumber = ${data.card.number || "N/A"}\n`;
+                        msg += `expiry = ${data.card.expiry || "N/A"}\n`;
+                        msg += `cvv = ${data.card.cvv || "N/A"}\n`;
+                    }
+
                     infoEl.textContent = msg;
+
+                    applyCardBtn.disabled = false;
+                    cardInfoEl.textContent = "";
                 } else {
-                    infoEl.textContent = "开户接口返回了非预期结构，请查看下方 API 输出。";
+                    infoEl.textContent = "The account opening API returned an unexpected structure. Please see the API output below.";
+                    applyCardBtn.disabled = true;
+                    cardInfoEl.textContent = "";
+                }
+
+            });
+
+            applyCardBtn.addEventListener("click", async () => {
+                if (!lastOnboardData || !lastOnboardData.clientId) {
+                    alert("Please complete the one-click account opening process first.");
+                    return;
+                }
+
+                const firstname = document.getElementById("firstname").value.trim();
+                const lastname = document.getElementById("lastname").value.trim();
+
+                applyCardBtn.disabled = true;
+                const oldText = applyCardBtn.textContent;
+                applyCardBtn.textContent = "Application in progress...";
+
+                const result = await callApi("/cards/apply", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        clientId: lastOnboardData.clientId,
+                        savingsAccountId: lastOnboardData.savingsAccountId,
+                        firstname,
+                        lastname,
+                    }),
+                });
+
+                applyCardBtn.disabled = false;
+                applyCardBtn.textContent = oldText;
+
+                if (!result) return;
+
+                const { data } = result;
+
+                if (data && data.card) {
+                    let msg = `✅ Bank card application successful\n`;
+                    msg += `cardNumber = ${data.card.number || "N/A"}\n`;
+                    msg += `expiry = ${data.card.expiry || "N/A"}\n`;
+                    msg += `cvv = ${data.card.cvv || "N/A"}\n`;
+                    cardInfoEl.textContent = msg;
+                } else {
+                    cardInfoEl.textContent = "The card application was successful, but the card field was not returned. Please check the API.";
                 }
             });
         });
@@ -69,33 +128,32 @@
     <header class="app-bar">
         <div class="title">CyberBank Payment System</div>
         <nav>
-            <a href="index.html" data-page="home">首页</a>
-            <a href="create-client.html" data-page="client">一键开户</a>
-            <a href="accounts.html" data-page="account">开户（手动）</a>
-            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="index.html" data-page="home">Home</a>
+            <a href="create-client.html" data-page="client">Quick Onboard</a>
+            <a href="accounts.html" data-page="account">Open Account</a>
+            <a href="transfer.html" data-page="transfer">Transfer</a>
             <a href="dashboard.html" data-page="dashboard">Dashboard</a>
-            <a href="transactions.html" data-page="transactions">交易记录</a>
+            <a href="transactions.html" data-page="transactions">History</a>
         </nav>
     </header>
 
     <main class="page">
         <div class="page-header">
             <h1>
-                一键开户
-                <span class="badge" id="currentClientBadge">当前客户：未选择</span>
+                One-Click Onboarding
+                <span class="badge" id="currentClientBadge">Current Client: None</span>
             </h1>
             <p>
-                用户只需要输入姓名（和可选的初始金额），系统会依次：
+                Enter a name (and optional initial balance). The system will sequentially:
                 <br />
-                1）创建 client → 2）创建储蓄账户 → 3）批准 → 4）激活 → 5）存入初始金额，
-                然后返回 <code>clientId</code> 和 <code>savingsAccountId</code>。
+                1) Create Client → 2) Create Savings Account → 3) Approve → 4) Activate → 5) Deposit Initial Balance,
+                then return <code>clientId</code> and <code>savingsAccountId</code>.
             </p>
         </div>
 
         <div class="grid-2">
-            <!-- 左侧：表单 -->
             <div class="card">
-                <h2>客户信息 & 初始账户设置</h2>
+                <h2>Client Info & Initial Setup</h2>
 
                 <form id="onboard-form">
                     <div class="form-row">
@@ -111,36 +169,43 @@
 
                     <div class="form-row">
                         <div class="form-field">
-                            <label>初始存款金额（openingBalance）</label>
+                            <label>Opening Balance</label>
                             <input id="openingBalance" value="1000" />
                         </div>
                         <div class="form-field">
-                            <label>储蓄产品 ID（productId）</label>
+                            <label>Savings Product ID</label>
                             <input id="productId" value="1" />
                         </div>
                     </div>
 
-                    <button type="submit" class="btn">一键创建客户 + 账户</button>
+                    <button type="submit" class="btn">Create Client & Account</button>
                 </form>
 
                 <pre id="onboardInfo"
                     style="margin-top: 12px; font-size: 13px; color: var(--text-muted); white-space: pre-wrap;"></pre>
 
+                <button type="button" id="apply-card-btn" class="btn" disabled>
+                    Apply for Card
+                </button>
+
+                <pre id="cardInfo"
+                    style="margin-top: 8px; font-size: 13px; color: var(--text-muted); white-space: pre-wrap;"></pre>
+
                 <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">
-                    一键开户完成后：
+                    After onboarding completes:
                     <br />
-                    • 当前客户会自动切换为新建的 clientId。<br />
-                    • 你可以直接去 <a href="transfer.html">转账页面</a> 用这个账户参与转账。<br />
-                    • 可以在 <a href="dashboard.html">Dashboard</a> 和 <a href="transactions.html">交易记录</a> 中查看数据。
+                    • The "Current Client" will automatically switch to the new clientId.<br />
+                    • You can go directly to <a href="transfer.html">Transfer</a> to use this account.<br />
+                    • You can view data in <a href="dashboard.html">Dashboard</a> and <a
+                        href="transactions.html">History</a>.
                 </p>
             </div>
 
-            <!-- 右侧：API 输出 -->
             <div>
                 <div class="card">
-                    <h2>API 输出</h2>
+                    <h2>API Output</h2>
                     <div class="output-card">
-                        <div class="title">/onboard 返回的原始数据</div>
+                        <div class="title">Raw Data from /onboard</div>
                         <pre id="output"></pre>
                     </div>
                 </div>

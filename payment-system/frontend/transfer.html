@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>CyberBank – 转账</title>
+    <title>CyberBank – Transfer</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="common.js" defer></script>
     <script defer>
@@ -23,7 +23,7 @@
                 );
 
                 if (!fromId || !toId || !amount) {
-                    alert("fromAccountId / toAccountId / amount 都不能为空且必须为数字");
+                    alert("fromAccountId, toAccountId, and amount are required and must be numbers");
                     return;
                 }
 
@@ -44,33 +44,34 @@
     <header class="app-bar">
         <div class="title">CyberBank Payment System</div>
         <nav>
-            <a href="index.html" data-page="home">首页</a>
-            <a href="create-client.html" data-page="client">创建客户</a>
-            <a href="accounts.html" data-page="account">开户</a>
-            <a href="transfer.html" data-page="transfer">转账</a>
+            <a href="index.html" data-page="home">Home</a>
+            <a href="create-client.html" data-page="client">Quick Onboard</a>
+            <a href="accounts.html" data-page="account">Open Account</a>
+            <a href="transfer.html" data-page="transfer">Transfer</a>
             <a href="dashboard.html" data-page="dashboard">Dashboard</a>
-            <a href="transactions.html" data-page="transactions">交易记录</a>
+            <a href="transactions.html" data-page="transactions">History</a>
         </nav>
     </header>
 
     <main class="page">
         <div class="page-header">
-            <h1>转账 <span class="badge" id="currentClientBadge">当前客户：未选择</span></h1>
-            <p>调用 <code>POST /payments</code> 完成账户间转账（前提是账户已在核心系统审批 + 激活）。</p>
+            <h1>Transfer <span class="badge" id="currentClientBadge">Current Client: None</span></h1>
+            <p>Calls <code>POST /payments</code> to transfer between accounts (Accounts must be approved + activated).
+            </p>
         </div>
 
         <div class="grid-2">
             <div class="card">
-                <h2>转账参数</h2>
+                <h2>Transfer Parameters</h2>
                 <form id="transfer-form">
                     <div class="form-row">
                         <div class="form-field">
                             <label>fromAccountId</label>
-                            <input id="fromAccountId" placeholder="来源账户 ID" />
+                            <input id="fromAccountId" placeholder="Source Account ID" />
                         </div>
                         <div class="form-field">
                             <label>toAccountId</label>
-                            <input id="toAccountId" placeholder="目标账户 ID" />
+                            <input id="toAccountId" placeholder="Target Account ID" />
                         </div>
                     </div>
                     <div class="form-row">
@@ -79,15 +80,15 @@
                             <input id="amount" value="120.5" />
                         </div>
                     </div>
-                    <button type="submit" class="btn">发起转账</button>
+                    <button type="submit" class="btn">Initiate Transfer</button>
                 </form>
             </div>
 
             <div>
                 <div class="card">
-                    <h2>API 输出</h2>
+                    <h2>API Output</h2>
                     <div class="output-card">
-                        <div class="title">输出</div>
+                        <div class="title">Output</div>
                         <pre id="output"></pre>
                     </div>
                 </div>
